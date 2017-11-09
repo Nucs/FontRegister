@@ -13,11 +13,10 @@ namespace FontRegAuto {
         private static readonly bool is64BitOperatingSystem = is64BitProcess || InternalCheckIsWow64();
         public static DirectoryInfo ExecutingDir => new DirectoryInfo(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase.Replace("file:///", "")) ?? "/");
 
-        public static void Main(string[] args) {
-            Console.Title = "FontRegAuto By Eli Belash / Nucs 2017";
+        public static int Main(string[] args) {
+            Console.Title = "FontRegister By Eli Belash / Nucs 2017";
             bool haltonend = false;
             List<string> fonts = new List<string>();
-
             void ProcessPath(string path) {
                 try {
                     Console.WriteLine($"Processing \"{path}\"");
@@ -41,7 +40,7 @@ namespace FontRegAuto {
             } else if (args != null && args.Length == 1 && args[0].StartsWith("--")) {
                 if (args[0] == "--clear" || args[0] == "--cleanup") {
                     RunCleanup();
-                    return;
+                     return 0;
                 } else {
                     Console.WriteLine("Unknown command: " + args[0]);
                     PrintInfo();
@@ -49,11 +48,11 @@ namespace FontRegAuto {
                 }
             } else if (args != null && args.Length >= 1) {
                 Console.WriteLine("Accepted arguments:");
-                args = args.Distinct().Where(a => a.StartsWith("--") == false).Where(s => string.IsNullOrEmpty(s.Trim())).ToArray();
-                foreach (var path in args)
+                var cargs = args.Distinct().Where(a => a.StartsWith("--") == false).Where(s => string.IsNullOrEmpty(s.Trim())).ToArray();
+                foreach (var path in cargs)
                     Console.WriteLine(path);
 
-                foreach (var path in args)
+                foreach (var path in args.Where(path=>path.StartsWith("-")==false))
                     ProcessPath(path);
 
                 fonts = fonts.Distinct().ToList();
@@ -65,12 +64,15 @@ namespace FontRegAuto {
                 Console.WriteLine();
             } else {
                 haltonend = true;
-                Console.WriteLine("Enter the search directories path [enter for current dir] [n/next to continue]");
+                Console.WriteLine("Enter the search directories path [enter for working directory] [n/next to continue]");
                 while (true) {
                     Console.Write(">");
                     var path = Console.ReadLine();
-                    if (string.IsNullOrEmpty(path))
-                        path = ExecutingDir.FullName;
+                    if (string.IsNullOrEmpty(path)) {
+                        path = Directory.GetCurrentDirectory();
+                        if (Directory.Exists(path) == false)
+                            path = ExecutingDir.FullName;
+                    }
                     if (path == "n" || path == "next") {
                         break;
                     }
@@ -93,31 +95,39 @@ namespace FontRegAuto {
             }
 
             DirectoryInfo cache = null;
-
             try {
-                //once you have the path you get the directory with:
-                cache = new DirectoryInfo(Path.Combine(ExecutingDir.FullName, "cache"));
-                if (!cache.Exists)
-                    cache.Create();
+                cache = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), $"cache_" + Path.ChangeExtension(Path.GetRandomFileName(), null)));
+                if (!IsDirectoryWritable(cache))
+                    throw new Exception($"Couldn't write to generated temporary directory. Test has failed, fallbacking.\n{cache.FullName}"); //fallback
             } catch (Exception e) {
-                Console.WriteLine($"Failed creating temporary directory at\n{cache?.FullName ?? "%current_exe%/cache"}\n{e}");
-                Exit();
-                return;
+                try {
+                    //once you have the path you get the directory with:
+                    cache = Directory.CreateDirectory(Path.Combine(ExecutingDir.FullName, "cache"));
+                    if (!IsDirectoryWritable(cache))
+                        throw new Exception($"Couldn't write to the generated temporary directory. Test has failed, failed.\n{cache.FullName}"); //fallback
+                } catch (Exception ee) {
+                    Console.WriteLine($"Failed creating temporary directory at\n{cache?.FullName ?? ""}\n{e}\n{ee}");
+                    Exit();
+                    return 1;
+                }
             }
 
-            Console.WriteLine("Cache Directory: " + cache);
+            Console.WriteLine("Cache Directory: " + cache.FullName);
             Console.WriteLine();
             Console.WriteLine("Copying...");
 
             foreach (var font in fonts)
                 try {
-                    var dest = Path.Combine(cache.FullName, font);
+                    var dest = Path.Combine(cache.FullName, font.Contains("\\") || font.Contains("/") ? Path.GetFileName(font) : font);
                     if (File.Exists(dest))
                         continue;
                     File.Copy(font, dest, false);
-                } catch (IOException e) { }
+                    MarkForDeletion(dest);
+                } catch (IOException) { }
+            //export fontreg.exe
             var installer = Path.Combine(cache.FullName, "FontReg.exe");
-            EmbeddedResource.ExportZipResource(cache, is64BitOperatingSystem ? "x64.zip" : "x86", Assembly.GetEntryAssembly());
+            EmbeddedResource.ExportZipResource(cache, is64BitOperatingSystem ? "x64.zip" : "x86.zip", Assembly.GetEntryAssembly());
+            MarkForDeletion(installer);
 
             var info = new ProcessStartInfo {
                 FileName = "cmd.exe",
@@ -126,6 +136,7 @@ namespace FontRegAuto {
                 UseShellExecute = false,
                 WindowStyle = ProcessWindowStyle.Hidden
             };
+
             Console.WriteLine($"Installing {fonts.Count} fonts......");
             var p = Process.Start(info);
             p.WaitForExit();
@@ -137,6 +148,7 @@ namespace FontRegAuto {
             Console.WriteLine("Exit code: " + (p.ExitCode == 0 ? "Succesfull" : "Errornous"));
 
             Exit(haltonend);
+            return p.ExitCode;
         }
 
         private static void AskContinue() {
@@ -233,6 +245,47 @@ namespace FontRegAuto {
                     return retVal;
                 }
             return false;
+        }
+
+        /// <summary>
+        ///     Quick reliable way to check writing permissions.
+        /// </summary>
+        internal static bool IsDirectoryWritable(DirectoryInfo dirPath) {
+            if (dirPath == null) return false;
+            try {
+                using (var fs = File.Create(Path.Combine(dirPath.FullName, Path.GetRandomFileName()), 1, FileOptions.DeleteOnClose)) {
+                    fs.WriteByte(1);
+                }
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        [Flags]
+        private enum MoveFileFlags {
+            None = 0,
+            ReplaceExisting = 1,
+            CopyAllowed = 2,
+            DelayUntilReboot = 4,
+            WriteThrough = 8,
+            CreateHardlink = 16,
+            FailIfNotTrackable = 32,
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern bool MoveFileEx(string lpExistingFileName, string lpNewFileName, MoveFileFlags dwFlags);
+
+        /// <summary>
+        ///     Marks a file for deletion on restart.<br></br>
+        ///     Note: it requires administrator permission and is used incase it is possible.
+        /// </summary>
+        public static bool MarkForDeletion(string path) {
+            try {
+                return MoveFileEx(path, null, MoveFileFlags.DelayUntilReboot);
+            } catch {
+                return false;
+            }
         }
     }
 }
