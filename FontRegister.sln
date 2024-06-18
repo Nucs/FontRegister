@@ -5,6 +5,13 @@ VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FontRegister", "FontRegister\FontRegister.csproj", "{DBBC29F7-7EDC-4E8E-BB40-408DE9FCE745}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FontRegister.UnitTests", "FontRegister.UnitTests\FontRegister.UnitTests.csproj", "{8772CC19-B83D-4E0D-90AF-75318EA3F474}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Others", "Others", "{D6E3C5CD-FF55-4AC9-ABBC-FADD7C529DEE}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +22,10 @@ Global
 		{DBBC29F7-7EDC-4E8E-BB40-408DE9FCE745}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBBC29F7-7EDC-4E8E-BB40-408DE9FCE745}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBBC29F7-7EDC-4E8E-BB40-408DE9FCE745}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8772CC19-B83D-4E0D-90AF-75318EA3F474}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8772CC19-B83D-4E0D-90AF-75318EA3F474}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8772CC19-B83D-4E0D-90AF-75318EA3F474}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8772CC19-B83D-4E0D-90AF-75318EA3F474}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
