@@ -95,6 +95,7 @@ namespace FontRegister.UnitTests
             }
         }
 
+        //AI! use Polly to retry
         private void TryDeleteFile(string filePath, int maxRetries)
         {
             // First try normal deletion attempts
@@ -112,7 +113,7 @@ namespace FontRegister.UnitTests
                     {
                         Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts");
                     }
-                    System.Threading.Thread.Sleep(200);
+                    System.Threading.Thread.Sleep(50);
                 }
                 catch (IOException)
                 {
@@ -120,11 +121,12 @@ namespace FontRegister.UnitTests
                     {
                         Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts");
                     }
-                    System.Threading.Thread.Sleep(200);
+                    System.Threading.Thread.Sleep(50);
                 }
             }
 
             // If normal attempts fail, try with FontCache service management
+            
             Console.WriteLine("Attempting FontCache service management approach...");
             try
             {
