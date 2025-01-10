@@ -31,6 +31,38 @@ jobs:
     - name: Test
       run: dotnet test FontRegister.sln --configuration Release --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage"
       
+    - name: Upload Coverage Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-reports
+        path: |
+          **/*.cobertura.xml
+        retention-days: 5
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: ${{ github.workspace }}/**/TestResults/**/*
+        retention-days: 5
+
+  report:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download Coverage Reports
+      uses: actions/download-artifact@v4
+      with:
+        name: coverage-reports
+        
+    - name: Download Test Results
+      uses: actions/download-artifact@v4
+      with:
+        name: test-results
+
     - name: Combine Coverage Reports
       uses: danielpalme/ReportGenerator-GitHub-Action@5.2.4
       with:
@@ -40,13 +72,6 @@ jobs:
         verbosity: "Info"
         title: "Code Coverage"
         tag: "${{ github.run_number }}_${{ github.run_id }}"
-
-    - name: Upload Combined Coverage XML
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage
-        path: ${{ github.workspace }}/Cobertura.xml
-        retention-days: 5
 
     - name: Publish Code Coverage Report
       uses: irongut/CodeCoverageSummary@v1.3.0
@@ -68,19 +93,11 @@ jobs:
         recreate: true
         path: code-coverage-results.md
 
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results
-        path: ${{ github.workspace }}/**/TestResults/**/*
-        retention-days: 5
-
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2.16.1
       if: always()
       with:
-        trx_files: "${{ github.workspace }}/**/*.trx"
+        files: "**/*.trx"
 
   publish:
     needs: build
