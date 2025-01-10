@@ -130,7 +130,7 @@ namespace FontRegister.UnitTests
 
             // Assert
             Assert.That(result, Is.EqualTo(0));
-            Assert.IsTrue(IsFontInstalled(Path.GetFileNameWithoutExtension(randomFontPath)), "Font was not successfully installed.");
+            Assert.That(IsFontInstalled(Path.GetFileNameWithoutExtension(randomFontPath)), Is.True, "Font was not successfully installed.");
         }
 
         [Test]
@@ -148,7 +148,7 @@ namespace FontRegister.UnitTests
             Assert.That(result, Is.EqualTo(0));
             foreach (var fontPath in randomFontPaths)
             {
-                Assert.IsTrue(IsFontInstalled(Path.GetFileNameWithoutExtension(fontPath)), $"Font {fontPath} was not successfully installed.");
+                Assert.That(IsFontInstalled(Path.GetFileNameWithoutExtension(fontPath)), Is.True, $"Font {fontPath} was not successfully installed.");
             }
         }
 
@@ -167,7 +167,7 @@ namespace FontRegister.UnitTests
             // Assert
             Assert.That(firstResult, Is.EqualTo(0), "First installation should succeed");
             Assert.That(secondResult, Is.EqualTo(0), "Second installation should succeed but warn");
-            Assert.IsTrue(IsFontInstalled(Path.GetFileNameWithoutExtension(randomFontPath)), "Font should remain installed");
+            Assert.That(IsFontInstalled(Path.GetFileNameWithoutExtension(randomFontPath)), Is.True, "Font should remain installed");
         }
 
         [Test]
@@ -188,7 +188,7 @@ namespace FontRegister.UnitTests
             // Assert
             Assert.That(firstResult, Is.EqualTo(0), "First uninstallation should succeed");
             Assert.That(secondResult, Is.EqualTo(0), "Second uninstallation should succeed but warn");
-            Assert.IsFalse(IsFontInstalled(fontName, true), "Font should remain uninstalled");
+            Assert.That(IsFontInstalled(fontName, true), Is.False, "Font should remain uninstalled");
         }
 
         [Test]
@@ -205,7 +205,7 @@ namespace FontRegister.UnitTests
 
             // Assert
             Assert.That(result, Is.EqualTo(0));
-            Assert.IsFalse(IsFontInstalled(fontName, true), "Font was not successfully uninstalled.");
+            Assert.That(IsFontInstalled(fontName, true), Is.False, "Font was not successfully uninstalled.");
         }
 
         [Test]
