@@ -222,13 +222,17 @@ jobs:
           "VERSION_SUFFIX=$version" >> $env:GITHUB_OUTPUT
         }
 
-    - name: Pack (Release)
+    - name: Build & Pack (Release)
       if: steps.check_prerelease.outputs.IS_PRERELEASE != 'True'
-      run: dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs
+      run: |
+        dotnet build FontRegister/FontRegister.csproj --configuration Release
+        dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs --no-build
 
-    - name: Pack (Prerelease)
+    - name: Build & Pack (Prerelease)
       if: steps.check_prerelease.outputs.IS_PRERELEASE == 'True'
-      run: dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs --version-suffix ${{ steps.check_prerelease.outputs.VERSION_SUFFIX }}
+      run: |
+        dotnet build FontRegister/FontRegister.csproj --configuration Release
+        dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs --no-build --version-suffix ${{ steps.check_prerelease.outputs.VERSION_SUFFIX }}
 
     - name: Push to NuGet
       run: dotnet nuget push nupkgs/*.nupkg --api-key ${{ secrets.NUGETAPIKEY }} --source https://api.nuget.org/v3/index.json
