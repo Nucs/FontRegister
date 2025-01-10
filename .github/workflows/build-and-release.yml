@@ -147,15 +147,17 @@ jobs:
         fi
 
     - name: Create ZIP Archive
+      shell: pwsh
       run: |
-        cd publish/${{ matrix.framework }}/${{ matrix.runtime }} && \
-        zip -r ../../../FontRegister-${{ matrix.framework }}-${{ matrix.runtime }}.zip ./*
+        $frameworkName = "${{ matrix.framework }}" -replace "-windows$",""
+        cd publish/${{ matrix.framework }}/${{ matrix.runtime }}
+        zip -r "../../../FontRegister-$frameworkName-${{ matrix.runtime }}.zip" ./*
       
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
         name: FontRegister-${{ matrix.framework }}-${{ matrix.runtime }}
-        path: FontRegister-${{ matrix.framework }}-${{ matrix.runtime }}.zip
+        path: FontRegister-${{ matrix.framework -replace "-windows$",""}}-${{ matrix.runtime }}.zip
         retention-days: 5
 
   create-release:
