@@ -50,7 +50,7 @@ public class WindowsFontInstaller : IFontInstaller
             var localFontDir = GetLocalFontDirectory();
 
             //check if font already installed, our normalized version vs given version
-            if (File.Exists(Path.Combine(localFontDir, fileName)) || File.Exists(Path.Combine(localFontDir, Path.GetFileName(fontPath)))) 
+            if (File.Exists(Path.Combine(localFontDir, fileName)) || File.Exists(Path.Combine(localFontDir, Path.GetFileName(fontPath))))
             {
                 Console.WriteLine($"{fileName}: Font already installed.");
                 return false;
@@ -140,6 +140,7 @@ public class WindowsFontInstaller : IFontInstaller
                 fileName = Path.GetFileName(fontNameOrPath);
                 fileName = Path.ChangeExtension(fileName, Path.GetExtension(fileName)?.ToLower());
                 fontNameOrPath = Path.GetFullPath(fontNameOrPath).Replace("/", "\\"); //normalize
+                fontPath = fontNameOrPath;
                 if (!fontNameOrPath.StartsWith(localFontDir, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException($"{fileName}: Cannot uninstall fonts outside the local font directory, path: {fontNameOrPath}, expected: {Path.Combine(localFontDir, fontNameOrPath)}");
             }
@@ -174,40 +175,53 @@ public class WindowsFontInstaller : IFontInstaller
                 }
             }
 
-            if (fontPath == null || !File.Exists(fontPath))
-            {
-                Console.WriteLine($"{fileName}: Font not found.");
-                return false;
-            }
+            var success = false;
 
             // Remove the font resource
-            if (!RemoveFontResourceA(fontPath))
+            // usually this method takes care of both file and registry.
+            if (fontPath != null && !RemoveFontResourceA(fontPath))
             {
                 //read error
                 var error = Marshal.GetLastWin32Error();
-                throw new InvalidOperationException($"{fileName}: Failed to remove font resource. (errorcode: {error})");
+                Console.WriteLine($"{fileName}: Failed to remove font resource. (errorcode: {error})");
+            }
+            else
+            {
+                success = true;
             }
 
             // Delete the font file
-            int deletionAttempts = 0;
-            while (true)
+            if (fontPath == null || !File.Exists(fontPath))
             {
-                try
+                if (!success)
+                    Console.WriteLine($"{fileName}: Font file not found.");
+            }
+            else
+            {
+                int deletionAttempts = 0;
+                while (true)
                 {
-                    deletionAttempts++;
-                    if (File.Exists(fontPath))
-                        File.Delete(fontPath);
-                    break;
-                }
-                catch (DirectoryNotFoundException)
-                {
-                    break;
-                }
-                catch (Exception e)
-                {
-                    Thread.Sleep(100);
-                    if (deletionAttempts > 10)
-                        throw new InvalidOperationException($"{fileName}: Failed to delete font file: {e.Message}");
+                    try
+                    {
+                        deletionAttempts++;
+                        if (File.Exists(fontPath))
+                        {
+                            File.Delete(fontPath);
+                            success = true;
+                        }
+
+                        break;
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        Thread.Sleep(100);
+                        if (deletionAttempts > 10)
+                            throw new InvalidOperationException($"{fileName}: Failed to delete font file: {e.Message}");
+                    }
                 }
             }
 
@@ -244,17 +258,22 @@ public class WindowsFontInstaller : IFontInstaller
                 if (registryValueName != null)
                 {
                     fontsKey.DeleteValue(registryValueName);
+                    success = true;
                 }
                 else
                 {
-                    Console.WriteLine($"{fileName}: Font not found in registry.");
+                    if (!success)
+                        Console.WriteLine($"{fileName}: Font not found in registry.");
                 }
             }
 
-            Console.WriteLine($"{fileName}: Font uninstalled successfully.");
+            if (success)
+                Console.WriteLine($"{fileName}: Font uninstalled successfully.");
+            else
+                Console.WriteLine($"{fileName}: Font not found anywhere and is probably uninstalled.");
 
             _systemNotifier?.NotifyFontChange();
-            return true;
+            return success;
         }
         catch (Exception ex)
         {
