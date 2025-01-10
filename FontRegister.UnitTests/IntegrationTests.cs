@@ -369,9 +369,21 @@ namespace FontRegister.UnitTests
 
         private bool IsFontInstalled(string fontName)
         {
-            //AI! retry policy 5 attempts, 100ms, 200ms, 400ms, 800ms, 1600ms
-            // Check in user font directory
-            if (File.Exists(Path.Combine(_userFontDirectory, fontName + ".otf")) ||
+            var retryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetry(new[]
+                {
+                    TimeSpan.FromMilliseconds(100),
+                    TimeSpan.FromMilliseconds(200),
+                    TimeSpan.FromMilliseconds(400),
+                    TimeSpan.FromMilliseconds(800),
+                    TimeSpan.FromMilliseconds(1600)
+                });
+
+            return retryPolicy.Execute(() =>
+            {
+                // Check in user font directory
+                if (File.Exists(Path.Combine(_userFontDirectory, fontName + ".otf")) ||
                 File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttf")) ||
                 File.Exists(Path.Combine(_userFontDirectory, fontName + ".fon")) ||
                 File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttc")))
@@ -387,6 +399,7 @@ namespace FontRegister.UnitTests
             }
 
             return false;
+            });
         }
     }
 
