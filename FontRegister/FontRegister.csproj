@@ -36,7 +36,7 @@
         <IncludeBuildOutput>true</IncludeBuildOutput>
         <IncludeContentInPack>true</IncludeContentInPack>
         <IncludeContentInSourcePackage>true</IncludeContentInSourcePackage>
-        <PackageIcon>Properties\icon.png</PackageIcon>
+        <PackageIcon>icon.png</PackageIcon>
     </PropertyGroup>
     <ItemGroup>
         <None Include="App.config"/>
@@ -47,11 +47,7 @@
       <PackageReference Include="System.IO.Compression" Version="4.3.0" />
     </ItemGroup>
     <ItemGroup>
-      <Content Update="Properties\icon.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <Content Update="Properties\icon.ico">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
+      <Content Include="Properties\icon.ico" Pack="true" PackagePath="" />
+      <Content Include="Properties\icon.png" Pack="true" PackagePath="" />
     </ItemGroup>
 </Project>
