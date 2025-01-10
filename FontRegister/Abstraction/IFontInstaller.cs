@@ -2,6 +2,6 @@
 
 public interface IFontInstaller
 {
-    void InstallFont(string fontPath);
-    void UninstallFont(string fontName);
+    bool InstallFont(string fontPath);
+    bool UninstallFont(string fontNameOrPath);
 }
