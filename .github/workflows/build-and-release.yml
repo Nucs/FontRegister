@@ -120,13 +120,22 @@ jobs:
           
     - name: Publish
       run: |
-        dotnet publish FontRegister/FontRegister.csproj \
-          --configuration Release \
-          --framework ${{ matrix.framework }} \
-          --runtime ${{ matrix.runtime }} \
-          --self-contained true \
-          -p:PublishSingleFile=true \
-          --output publish/${{ matrix.framework }}/${{ matrix.runtime }}
+        if [ "${{ matrix.framework }}" = "net48" ]; then
+          dotnet publish FontRegister/FontRegister.csproj \
+            --configuration Release \
+            --framework ${{ matrix.framework }} \
+            --runtime ${{ matrix.runtime }} \
+            --self-contained true \
+            --output publish/${{ matrix.framework }}/${{ matrix.runtime }}
+        else
+          dotnet publish FontRegister/FontRegister.csproj \
+            --configuration Release \
+            --framework ${{ matrix.framework }} \
+            --runtime ${{ matrix.runtime }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            --output publish/${{ matrix.framework }}/${{ matrix.runtime }}
+        fi
 
     - name: Create ZIP Archive
       run: |
