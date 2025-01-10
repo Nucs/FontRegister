@@ -120,19 +120,18 @@ jobs:
           
     - name: Publish
       run: |
-        dotnet publish FontRegister/FontRegister.csproj `
-          --configuration Release `
-          --framework ${{ matrix.framework }} `
-          --runtime ${{ matrix.runtime }} `
-          --self-contained true `
-          -p:PublishSingleFile=true `
+        dotnet publish FontRegister/FontRegister.csproj \
+          --configuration Release \
+          --framework ${{ matrix.framework }} \
+          --runtime ${{ matrix.runtime }} \
+          --self-contained true \
+          -p:PublishSingleFile=true \
           --output publish/${{ matrix.framework }}/${{ matrix.runtime }}
-
 
     - name: Create ZIP Archive
       run: |
-        Compress-Archive -Path "publish/${{ matrix.framework }}/${{ matrix.runtime }}/*" `
-          -DestinationPath "FontRegister-${{ matrix.framework }}-${{ matrix.runtime }}.zip"
+        cd publish/${{ matrix.framework }}/${{ matrix.runtime }} && \
+        zip -r ../../../FontRegister-${{ matrix.framework }}-${{ matrix.runtime }}.zip ./*
       
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
