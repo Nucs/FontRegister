@@ -97,7 +97,99 @@ namespace FontRegister.UnitTests
             }
         }
         
-        //AI! use windows api to release the locking process from locking the file / release the lock on the file
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr CreateFile(
+            string lpFileName,
+            uint dwDesiredAccess,
+            uint dwShareMode,
+            IntPtr lpSecurityAttributes,
+            uint dwCreationDisposition,
+            uint dwFlagsAndAttributes,
+            IntPtr hTemplateFile);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr hObject);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern int GetFileInformationByHandleEx(
+            IntPtr hFile,
+            int fileInformationClass,
+            out FILE_PROCESS_IDS_USING_FILE_INFORMATION outInfo,
+            int dwBufferSize);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct FILE_PROCESS_IDS_USING_FILE_INFORMATION
+        {
+            public uint ProcessIdCount;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
+            public uint[] ProcessIds;
+        }
+
+        private const uint GENERIC_READ = 0x80000000;
+        private const uint FILE_SHARE_READ = 0x00000001;
+        private const uint FILE_SHARE_WRITE = 0x00000002;
+        private const uint FILE_SHARE_DELETE = 0x00000004;
+        private const uint OPEN_EXISTING = 3;
+        private const int FileProcessIdsUsingFileInformation = 47;
+
+        private bool ReleaseFileLock(string filePath)
+        {
+            IntPtr handle = CreateFile(
+                filePath,
+                GENERIC_READ,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                IntPtr.Zero,
+                OPEN_EXISTING,
+                0,
+                IntPtr.Zero);
+
+            if (handle.ToInt64() == -1)
+            {
+                return false;
+            }
+
+            try
+            {
+                var info = new FILE_PROCESS_IDS_USING_FILE_INFORMATION();
+                int result = GetFileInformationByHandleEx(
+                    handle,
+                    FileProcessIdsUsingFileInformation,
+                    out info,
+                    Marshal.SizeOf<FILE_PROCESS_IDS_USING_FILE_INFORMATION>());
+
+                if (result != 0 && info.ProcessIdCount > 0)
+                {
+                    foreach (uint processId in info.ProcessIds)
+                    {
+                        try
+                        {
+                            var process = Process.GetProcessById((int)processId);
+                            if (process.ProcessName.Equals("fontdrvhost", StringComparison.OrdinalIgnoreCase) ||
+                                process.ProcessName.Equals("explorer", StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue; // Skip essential Windows processes
+                            }
+                            process.Kill();
+                            process.WaitForExit(1000);
+                        }
+                        catch (ArgumentException)
+                        {
+                            // Process already terminated
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to terminate process: {ex.Message}");
+                        }
+                    }
+                    return true;
+                }
+            }
+            finally
+            {
+                CloseHandle(handle);
+            }
+            return false;
+        }
 
         private void TryDeleteFile(string filePath, int maxRetries)
         {
@@ -108,7 +200,12 @@ namespace FontRegister.UnitTests
                     retryAttempt => TimeSpan.FromMilliseconds(50),
                     (exception, timeSpan, retryCount, context) =>
                     {
-                        if (retryCount == maxRetries)
+                        if (retryCount == maxRetries / 2)
+                        {
+                            Console.WriteLine($"Attempting to release file locks for {filePath}");
+                            ReleaseFileLock(filePath);
+                        }
+                        else if (retryCount == maxRetries)
                         {
                             Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts");
                             TryDeleteWithFontCacheService(filePath);
