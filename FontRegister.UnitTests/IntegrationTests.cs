@@ -248,6 +248,9 @@ namespace FontRegister.UnitTests
                 Assert.IsTrue(IsFontInstalled(Path.GetFileNameWithoutExtension(fontPath)), $"Font {fontPath} was not successfully installed.");
             }
         }
+        
+        //AI! add install same font twice test
+        //AI! add uninstall same font twice test
 
         [Test]
         public void CommandLine_UninstallFont_ShouldSucceed()
