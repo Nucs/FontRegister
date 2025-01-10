@@ -186,3 +186,39 @@ jobs:
         draft: false
         prerelease: ${{ steps.check_prerelease.outputs.IS_PRERELEASE }}
         body: ${{ steps.release-notes.outputs.RELEASE_NOTES }}
+
+  publish-nuget:
+    needs: create-release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: |
+          6.0.x
+          8.0.x
+
+    - name: Check if Prerelease
+      id: check_prerelease
+      shell: pwsh
+      run: |
+        $isPrerelease = $env:GITHUB_REF -match '.*(-alpha|-beta|-prerelease).*'
+        "IS_PRERELEASE=$isPrerelease" >> $env:GITHUB_OUTPUT
+        if ($isPrerelease) {
+          $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
+          "VERSION_SUFFIX=$version" >> $env:GITHUB_OUTPUT
+        }
+
+    - name: Pack (Release)
+      if: steps.check_prerelease.outputs.IS_PRERELEASE != 'True'
+      run: dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs
+
+    - name: Pack (Prerelease)
+      if: steps.check_prerelease.outputs.IS_PRERELEASE == 'True'
+      run: dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs --version-suffix ${{ steps.check_prerelease.outputs.VERSION_SUFFIX }}
+
+    - name: Push to NuGet
+      run: dotnet nuget push nupkgs/*.nupkg --api-key ${{ secrets.NUGETAPIKEY }} --source https://api.nuget.org/v3/index.json
