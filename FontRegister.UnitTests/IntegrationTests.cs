@@ -95,38 +95,31 @@ namespace FontRegister.UnitTests
             }
         }
 
-        //AI! use Polly to retry
         private void TryDeleteFile(string filePath, int maxRetries)
         {
-            // First try normal deletion attempts
-            for (int i = 0; i < maxRetries; i++)
-            {
-                try
-                {
-                    File.Delete(filePath);
-                    Console.WriteLine($"Deleted font file {filePath}");
-                    return;
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    if (i == maxRetries - 1) 
+            var policy = Policy
+                .Handle<UnauthorizedAccessException>()
+                .Or<IOException>()
+                .WaitAndRetry(maxRetries, 
+                    retryAttempt => TimeSpan.FromMilliseconds(50),
+                    (exception, timeSpan, retryCount, context) =>
                     {
-                        Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts");
-                    }
-                    System.Threading.Thread.Sleep(50);
-                }
-                catch (IOException)
-                {
-                    if (i == maxRetries - 1) 
-                    {
-                        Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts");
-                    }
-                    System.Threading.Thread.Sleep(50);
-                }
-            }
+                        if (retryCount == maxRetries)
+                        {
+                            Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts");
+                            TryDeleteWithFontCacheService(filePath);
+                        }
+                    });
 
-            // If normal attempts fail, try with FontCache service management
-            
+            policy.Execute(() =>
+            {
+                File.Delete(filePath);
+                Console.WriteLine($"Deleted font file {filePath}");
+            });
+        }
+
+        private void TryDeleteWithFontCacheService(string filePath)
+        {
             Console.WriteLine("Attempting FontCache service management approach...");
             try
             {
@@ -135,7 +128,6 @@ namespace FontRegister.UnitTests
                 {
                     File.Delete(filePath);
                     Console.WriteLine($"Deleted font file {filePath} after stopping FontCache");
-                    return;
                 }
                 finally
                 {
