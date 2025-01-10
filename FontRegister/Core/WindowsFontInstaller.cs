@@ -1,21 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Microsoft.Win32;
-using System.Linq;
 using FontRegister.Abstraction;
 
 namespace FontRegister;
 public class WindowsFontInstaller : IFontInstaller
 {
-    private static readonly string[] _supportedExtensions = { ".ttf", ".otf", ".fon", ".ttc" };
-
-    [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
-    private static extern int AddFontResourceW(string lpszFilename);
-
-    [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
-    private static extern bool RemoveFontResourceW(string lpszFilename);
-
     private readonly ISystemNotifier? _systemNotifier;
 
     public WindowsFontInstaller()
@@ -46,7 +35,7 @@ public class WindowsFontInstaller : IFontInstaller
             var fontName = Path.GetFileNameWithoutExtension(fontPath);
             fontName = char.ToUpper(fontName[0]) + fontName.Substring(1); //first letter capital
 
-            var localFontDir = GetLocalFontDirectory();
+            var localFontDir = FontConsts.GetLocalFontDirectory();
 
             //check if font already installed, our normalized version vs given version
             if (File.Exists(Path.Combine(localFontDir, fileName)) || File.Exists(Path.Combine(localFontDir, Path.GetFileName(fontPath))))
@@ -87,7 +76,7 @@ public class WindowsFontInstaller : IFontInstaller
             }
 
             // Add the font resource
-            if (AddFontResourceW(destPath) == 0)
+            if (WinApi.AddFontResource(destPath) == 0)
             {
                 throw new InvalidOperationException($"{fileName}: Failed to add font resource.");
             }
@@ -132,7 +121,7 @@ public class WindowsFontInstaller : IFontInstaller
             if (fontNameOrPath.Contains("\\") || fontNameOrPath.Contains("/") || Path.IsPathRooted(fontNameOrPath) || fontNameOrPath.Contains(".."))
                 fontNameOrPath = Path.GetFullPath(fontNameOrPath).Replace("/", "\\"); //normalize
 
-            var localFontDir = GetLocalFontDirectory();
+            var localFontDir = FontConsts.GetLocalFontDirectory();
             //handle full path inside local font directory passed
             if (Path.IsPathRooted(fontNameOrPath))
             {
@@ -149,7 +138,7 @@ public class WindowsFontInstaller : IFontInstaller
                 if (!Path.HasExtension(fontNameOrPath))
                 {
                     fileName = fontNameOrPath; //for error message, expected to be replaced
-                    foreach (var ext in _supportedExtensions)
+                    foreach (var ext in FontConsts.SupportedExtensions)
                     {
                         var potentialFileName = fontNameOrPath + ext;
                         var potentialPath = Path.Combine(localFontDir, potentialFileName);
@@ -169,7 +158,7 @@ public class WindowsFontInstaller : IFontInstaller
                     fileName = fontNameOrPath;
                     fileName = Path.ChangeExtension(fileName, Path.GetExtension(fileName)?.ToLower());
                     fontPath = Path.Combine(localFontDir, fontNameOrPath);
-                    if (!_supportedExtensions.Contains(Path.GetExtension(fontNameOrPath), StringComparer.OrdinalIgnoreCase))
+                    if (!FontConsts.SupportedExtensions.Contains(Path.GetExtension(fontNameOrPath), StringComparer.OrdinalIgnoreCase))
                         throw new InvalidOperationException($"{fileName}: Unsupported font extension: {Path.GetExtension(fontNameOrPath)}");
                 }
             }
@@ -179,7 +168,7 @@ public class WindowsFontInstaller : IFontInstaller
             // Remove the font resource
             // usually this method takes care of both file and registry.
             //RemoveFontResourceW always returns true so success relies if file existed before that
-            if (fontPath != null && !RemoveFontResourceW(fontPath))
+            if (fontPath != null && !WinApi.RemoveFontResource(fontPath))
             {
                 //read error
                 var error = Marshal.GetLastWin32Error();
@@ -280,19 +269,5 @@ public class WindowsFontInstaller : IFontInstaller
             Console.WriteLine($"{fileName}: Error uninstalling font: {ex.Message}");
             return false;
         }
-    }
-
-    private string GetLocalFontDirectory()
-    {
-        var localFontDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Microsoft", "Windows", "Fonts"
-        );
-
-        //normalize path
-        localFontDir = Path.GetFullPath(localFontDir).Replace("/", "\\");
-
-        Directory.CreateDirectory(localFontDir);
-        return localFontDir;
     }
 }
