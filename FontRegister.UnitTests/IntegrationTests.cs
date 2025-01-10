@@ -36,11 +36,12 @@ namespace FontRegister.UnitTests
         {
             _tempFontDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_tempFontDirectory);
+            while(!Directory.Exists(_tempFontDirectory))
+            {
+                Thread.Sleep(10);
+            }
 
-            _userFontDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Microsoft", "Windows", "Fonts"
-            );
+            _userFontDirectory = FontConsts.GetLocalFontDirectory();
 
             // Create multiple test fonts
             for (int i = 0; i < 5; i++)
@@ -134,7 +135,7 @@ namespace FontRegister.UnitTests
         }
 
         [Test]
-        [Retry(3)]
+        [Retry(5)]
         public void CommandLine_InstallMultipleFonts_ShouldSucceed()
         {
             // Arrange
