@@ -174,12 +174,10 @@ jobs:
 
     - name: Check if Prerelease
       id: check_prerelease
+      shell: pwsh
       run: |
-        if [[ $GITHUB_REF =~ .*(-alpha|-beta|-prerelease).* ]]; then
-          echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
-        else
-          echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
-        fi
+        $isPrerelease = $env:GITHUB_REF -match '.*(-alpha|-beta|-prerelease).*'
+        "IS_PRERELEASE=$isPrerelease" >> $env:GITHUB_OUTPUT
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
