@@ -2,18 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Drawing.Text;
 using System.Text.RegularExpressions;
-using FontRegister;
 using Microsoft.Win32;
 using NUnit.Framework;
 
-namespace FontRegAuto.Tests
+namespace FontRegister.UnitTests
 {
     [TestFixture("Historic.otf")]
     [TestFixture("Mang Kenapa.otf")]
     [TestFixture("Mang Kenapa.ttf")]
+    [TestFixture("steelfis.fon")]
+    [TestFixture("meiryo.ttc")]
     public class IntegrationTests
     {
         private const string TEST_FONT_PATTERN = @"TestFont_\w+";
@@ -96,6 +95,7 @@ namespace FontRegAuto.Tests
             }
         }
 
+        //AI! if deletion failed, we must stop FontCache service, delete and start again
         private void TryDeleteFile(string filePath, int maxRetries)
         {
             for (int i = 0; i < maxRetries; i++)
@@ -110,13 +110,13 @@ namespace FontRegAuto.Tests
                 {
                     if (i == maxRetries - 1) Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts. Retrying...");
 
-                    System.Threading.Thread.Sleep(100); // Wait a bit before retrying
+                    System.Threading.Thread.Sleep(200); // Wait a bit before retrying
                 }
                 catch (IOException)
                 {
                     if (i == maxRetries - 1) Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts. Retrying...");
 
-                    System.Threading.Thread.Sleep(100); // Wait a bit before retrying
+                    System.Threading.Thread.Sleep(200); // Wait a bit before retrying
                 }
             }
         }
@@ -129,10 +129,10 @@ namespace FontRegAuto.Tests
             var args = new[] { "install", randomFontPath };
 
             // Act
-            var result = Program.Main(args);
+            var result = FontRegister.Program.Main(args);
 
             // Assert
-            Assert.AreEqual(0, result);
+            Assert.That(result, Is.EqualTo(0));
             Assert.IsTrue(IsFontInstalled(Path.GetFileNameWithoutExtension(randomFontPath)), "Font was not successfully installed.");
         }
 
@@ -144,10 +144,10 @@ namespace FontRegAuto.Tests
             var args = new[] { "install" }.Concat(randomFontPaths).ToArray();
 
             // Act
-            var result = Program.Main(args);
+            var result = FontRegister.Program.Main(args);
 
             // Assert
-            Assert.AreEqual(0, result);
+            Assert.That(result, Is.EqualTo(0));
             foreach (var fontPath in randomFontPaths)
             {
                 Assert.IsTrue(IsFontInstalled(Path.GetFileNameWithoutExtension(fontPath)), $"Font {fontPath} was not successfully installed.");
@@ -160,13 +160,13 @@ namespace FontRegAuto.Tests
             // Arrange
             string randomFontPath = GetRandomTestFontPath();
             string fontName = Path.GetFileNameWithoutExtension(randomFontPath);
-            Program.Main(new[] { "install", randomFontPath });
+            FontRegister.Program.Main(new[] { "install", randomFontPath });
 
             // Act
-            var result = Program.Main(new[] { "uninstall", fontName });
+            var result = FontRegister.Program.Main(new[] { "uninstall", fontName });
 
             // Assert
-            Assert.AreEqual(0, result);
+            Assert.That(result, Is.EqualTo(0));
             Assert.IsFalse(IsFontInstalled(fontName), "Font was not successfully uninstalled.");
         }
 
@@ -177,10 +177,10 @@ namespace FontRegAuto.Tests
             var args = new[] { "invalid-arg" };
 
             // Act
-            var result = Program.Main(args);
+            var result = FontRegister.Program.Main(args);
 
             // Assert
-            Assert.AreEqual(1, result);
+            Assert.That(result, Is.EqualTo(1));
         }
 
         [Test]
@@ -190,10 +190,10 @@ namespace FontRegAuto.Tests
             var args = new string[0];
 
             // Act
-            var result = Program.Main(args);
+            var result = FontRegister.Program.Main(args);
 
             // Assert
-            Assert.AreEqual(1, result);
+            Assert.That(result, Is.EqualTo(1));
             // Note: You might want to capture console output to verify usage information is printed
         }
 
