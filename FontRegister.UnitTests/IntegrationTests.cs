@@ -249,8 +249,42 @@ namespace FontRegister.UnitTests
             }
         }
         
-        //AI! add install same font twice test
-        //AI! add uninstall same font twice test
+        [Test]
+        public void CommandLine_InstallSameFontTwice_ShouldReturnSuccessAndWarn()
+        {
+            // Arrange
+            string randomFontPath = GetRandomTestFontPath();
+            var args = new[] { "install", randomFontPath };
+
+            // Act
+            var firstResult = FontRegister.Program.Main(args);
+            var secondResult = FontRegister.Program.Main(args);
+
+            // Assert
+            Assert.That(firstResult, Is.EqualTo(0), "First installation should succeed");
+            Assert.That(secondResult, Is.EqualTo(0), "Second installation should succeed but warn");
+            Assert.IsTrue(IsFontInstalled(Path.GetFileNameWithoutExtension(randomFontPath)), "Font should remain installed");
+        }
+
+        [Test]
+        public void CommandLine_UninstallSameFontTwice_ShouldReturnSuccessAndWarn()
+        {
+            // Arrange
+            string randomFontPath = GetRandomTestFontPath();
+            string fontName = Path.GetFileNameWithoutExtension(randomFontPath);
+            
+            // Install first
+            FontRegister.Program.Main(new[] { "install", randomFontPath });
+
+            // Act
+            var firstResult = FontRegister.Program.Main(new[] { "uninstall", fontName });
+            var secondResult = FontRegister.Program.Main(new[] { "uninstall", fontName });
+
+            // Assert
+            Assert.That(firstResult, Is.EqualTo(0), "First uninstallation should succeed");
+            Assert.That(secondResult, Is.EqualTo(0), "Second uninstallation should succeed but warn");
+            Assert.IsFalse(IsFontInstalled(fontName), "Font should remain uninstalled");
+        }
 
         [Test]
         public void CommandLine_UninstallFont_ShouldSucceed()
