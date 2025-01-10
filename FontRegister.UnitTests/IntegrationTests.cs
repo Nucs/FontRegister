@@ -299,11 +299,8 @@ namespace FontRegister.UnitTests
                 return retryPolicy.Execute(() =>
                 {
                     // Check in user font directory
-                    //AI! use FontConsts.SupportedExtensions
-                    if (File.Exists(Path.Combine(_userFontDirectory, fontName + ".otf")) ||
-                        File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttf")) ||
-                        File.Exists(Path.Combine(_userFontDirectory, fontName + ".fon")) ||
-                        File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttc")))
+                    if (FontConsts.SupportedExtensions.Any(ext => 
+                        File.Exists(Path.Combine(_userFontDirectory, fontName + ext))))
                     {
                         // Check registry
                         using (var fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts"))
