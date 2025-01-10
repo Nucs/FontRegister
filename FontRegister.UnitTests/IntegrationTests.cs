@@ -299,6 +299,7 @@ namespace FontRegister.UnitTests
                 return retryPolicy.Execute(() =>
                 {
                     // Check in user font directory
+                    //AI! use FontConsts.SupportedExtensions
                     if (File.Exists(Path.Combine(_userFontDirectory, fontName + ".otf")) ||
                         File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttf")) ||
                         File.Exists(Path.Combine(_userFontDirectory, fontName + ".fon")) ||
