@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Microsoft.Win32;
 using NUnit.Framework;
 using Polly;
@@ -95,6 +96,8 @@ namespace FontRegister.UnitTests
                 }
             }
         }
+        
+        //AI! use windows api to release the locking process from locking the file / release the lock on the file
 
         private void TryDeleteFile(string filePath, int maxRetries)
         {
