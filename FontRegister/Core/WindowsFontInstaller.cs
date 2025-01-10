@@ -6,16 +6,15 @@ using System.Linq;
 using FontRegister.Abstraction;
 
 namespace FontRegister;
-//AI! use AddFontResourceW and RemoveFontResourceW instead of A for unicode support
 public class WindowsFontInstaller : IFontInstaller
 {
     private static readonly string[] _supportedExtensions = { ".ttf", ".otf", ".fon", ".ttc" };
 
-    [DllImport("gdi32.dll")]
-    private static extern int AddFontResourceA(string lpszFilename);
+    [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
+    private static extern int AddFontResourceW(string lpszFilename);
 
-    [DllImport("gdi32.dll")]
-    private static extern bool RemoveFontResourceA(string lpszFilename);
+    [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
+    private static extern bool RemoveFontResourceW(string lpszFilename);
 
     private readonly ISystemNotifier? _systemNotifier;
 
@@ -88,7 +87,7 @@ public class WindowsFontInstaller : IFontInstaller
             }
 
             // Add the font resource
-            if (AddFontResourceA(destPath) == 0)
+            if (AddFontResourceW(destPath) == 0)
             {
                 throw new InvalidOperationException($"{fileName}: Failed to add font resource.");
             }
@@ -179,8 +178,8 @@ public class WindowsFontInstaller : IFontInstaller
 
             // Remove the font resource
             // usually this method takes care of both file and registry.
-            //RemoveFontResourceA always returns true so success relies if file existed before that
-            if (fontPath != null && !RemoveFontResourceA(fontPath))
+            //RemoveFontResourceW always returns true so success relies if file existed before that
+            if (fontPath != null && !RemoveFontResourceW(fontPath))
             {
                 //read error
                 var error = Marshal.GetLastWin32Error();
