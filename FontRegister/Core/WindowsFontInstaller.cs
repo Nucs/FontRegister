@@ -6,7 +6,7 @@ using System.Linq;
 using FontRegister.Abstraction;
 
 namespace FontRegister;
-
+//AI! use AddFontResourceW and RemoveFontResourceW instead of A for unicode support
 public class WindowsFontInstaller : IFontInstaller
 {
     private static readonly string[] _supportedExtensions = { ".ttf", ".otf", ".fon", ".ttc" };
@@ -179,6 +179,7 @@ public class WindowsFontInstaller : IFontInstaller
 
             // Remove the font resource
             // usually this method takes care of both file and registry.
+            //RemoveFontResourceA always returns true so success relies if file existed before that
             if (fontPath != null && !RemoveFontResourceA(fontPath))
             {
                 //read error
