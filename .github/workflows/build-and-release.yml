@@ -179,10 +179,20 @@ jobs:
         $isPrerelease = $env:GITHUB_REF -match '.*(-alpha|-beta|-prerelease).*'
         "IS_PRERELEASE=$isPrerelease" >> $env:GITHUB_OUTPUT
 
+    - name: Generate Checksums
+      shell: pwsh
+      run: |
+        Get-ChildItem -Filter "FontRegister-*.zip" | ForEach-Object {
+          $hash = Get-FileHash -Path $_.FullName -Algorithm SHA256
+          $hash.Hash | Out-File -FilePath "$($_.FullName).sha256" -NoNewline -Encoding utf8
+        }
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: FontRegister-*.zip
+        files: |
+          FontRegister-*.zip
+          FontRegister-*.zip.sha256
         draft: false
         prerelease: ${{ steps.check_prerelease.outputs.IS_PRERELEASE }}
         body: ${{ steps.release-notes.outputs.RELEASE_NOTES }}
