@@ -26,9 +26,8 @@
       <EmbeddedResource Include="Resources\Historic.otf" />
       <EmbeddedResource Include="Resources\Mang Kenapa.otf" />
       <EmbeddedResource Include="Resources\Mang Kenapa.ttf" />
-      <None Remove="Historic.otf" />
-      <None Remove="Mang Kenapa.otf" />
-      <None Remove="Mang Kenapa.ttf" />
+      <EmbeddedResource Include="Resources\steelfis.fon" />
+      <EmbeddedResource Include="Resources\meiryo.ttc" />
     </ItemGroup>
 
 </Project>

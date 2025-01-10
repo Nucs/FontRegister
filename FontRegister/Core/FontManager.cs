@@ -19,8 +19,11 @@ public class FontManager
             {
                 string[] fontFiles = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories)
                     .Where(file => file.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) ||
-                                   file.EndsWith(".otf", StringComparison.OrdinalIgnoreCase))
+                                   file.EndsWith(".otf", StringComparison.OrdinalIgnoreCase) ||
+                                   file.EndsWith(".fon", StringComparison.OrdinalIgnoreCase) ||
+                                   file.EndsWith(".ttc", StringComparison.OrdinalIgnoreCase))
                     .ToArray();
+
                 foreach (string fontFile in fontFiles)
                 {
                     _fontInstaller.InstallFont(fontFile);

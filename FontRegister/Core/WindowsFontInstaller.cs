@@ -77,7 +77,7 @@ public class WindowsFontInstaller : IFontInstaller
         try
         {
             string localFontDir = GetLocalFontDirectory();
-            string[] possibleExtensions = { ".ttf", ".otf" };
+            string[] possibleExtensions = { ".ttf", ".otf", ".fon", ".ttc" };
             string fontPath = null;
 
             foreach (var ext in possibleExtensions)
