@@ -4,17 +4,17 @@
         <OutputType>Exe</OutputType>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <TargetFrameworks>net48;net6.0-windows</TargetFrameworks>
+        <TargetFrameworks>net48;net6.0-windows;net8.0-windows</TargetFrameworks>
         <AssemblyTitle>FontRegister</AssemblyTitle>
         <AssemblyProduct>FontRegister</AssemblyProduct>
         <AssemblyCopyright>Copyright © Eli Belash / Nucs 2017</AssemblyCopyright>
-        <AssemblyVersion>2.0.0.0</AssemblyVersion>
+        <AssemblyVersion>2.1.0.0</AssemblyVersion>
         <LangVersion>10</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>2.0.0</Version>
+        <Version>2.1.0</Version>
         <Title>FontRegister</Title>
         <Description>A library and a cli tool to install/uninstall fonts directly in windows, supporting bulk installs, folder installs.</Description>
-        <Copyright>Eli Belash @ 2024</Copyright>
+        <Copyright>Eli Belash @ 2025</Copyright>
         <PackageLicenseUrl>https://github.com/Nucs/FontRegister/blob/master/LICENSE</PackageLicenseUrl>
         <Authors>Eli Belash</Authors>
         <PackageProjectUrl>https://github.com/Nucs/FontRegister</PackageProjectUrl>
@@ -27,7 +27,7 @@
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-        
+
         <!--generate pdb-->
         <DebugType>portable</DebugType>
         <DebugSymbols>true</DebugSymbols>
@@ -36,6 +36,7 @@
         <IncludeBuildOutput>true</IncludeBuildOutput>
         <IncludeContentInPack>true</IncludeContentInPack>
         <IncludeContentInSourcePackage>true</IncludeContentInSourcePackage>
+        <PackageIcon>Properties\icon.png</PackageIcon>
     </PropertyGroup>
     <ItemGroup>
         <None Include="App.config"/>
