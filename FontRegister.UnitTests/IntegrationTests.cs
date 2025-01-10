@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Win32;
@@ -59,6 +61,10 @@ namespace FontRegister.UnitTests
             {
                 Console.WriteLine($"Warning: Unable to delete temporary directory {_tempFontDirectory}. It may need manual cleanup.");
             }
+            catch (UnauthorizedAccessException)
+            {
+                Console.WriteLine($"Warning: Unable to delete temporary directory {_tempFontDirectory}. It may need manual cleanup.");
+            }
         }
 
         private void CleanupTestFonts()
@@ -70,7 +76,7 @@ namespace FontRegister.UnitTests
             {
                 if (regex.IsMatch(Path.GetFileNameWithoutExtension(file)))
                 {
-                    TryDeleteFile(file, maxRetries: 15);
+                    TryDeleteFile(file);
                 }
             }
 
@@ -96,7 +102,7 @@ namespace FontRegister.UnitTests
                 }
             }
         }
-        
+
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern IntPtr CreateFile(
             string lpFileName,
@@ -121,6 +127,7 @@ namespace FontRegister.UnitTests
         private struct FILE_PROCESS_IDS_USING_FILE_INFORMATION
         {
             public uint ProcessIdCount;
+
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
             public uint[] ProcessIds;
         }
@@ -169,6 +176,7 @@ namespace FontRegister.UnitTests
                             {
                                 continue; // Skip essential Windows processes
                             }
+
                             process.Kill();
                             process.WaitForExit(1000);
                         }
@@ -181,6 +189,7 @@ namespace FontRegister.UnitTests
                             Console.WriteLine($"Failed to terminate process: {ex.Message}");
                         }
                     }
+
                     return true;
                 }
             }
@@ -188,114 +197,22 @@ namespace FontRegister.UnitTests
             {
                 CloseHandle(handle);
             }
+
             return false;
         }
 
-        private void TryDeleteFile(string filePath, int maxRetries)
-        {
-            var policy = Policy
-                .Handle<UnauthorizedAccessException>()
-                .Or<IOException>()
-                .WaitAndRetry(maxRetries, 
-                    retryAttempt => TimeSpan.FromMilliseconds(50),
-                    (exception, timeSpan, retryCount, context) =>
-                    {
-                        if (retryCount == maxRetries / 2)
-                        {
-                            Console.WriteLine($"Attempting to release file locks for {filePath}");
-                            ReleaseFileLock(filePath);
-                        }
-                        else if (retryCount == maxRetries)
-                        {
-                            Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts");
-                            TryDeleteWithFontCacheService(filePath);
-                        }
-                    });
+        //TODO: test installing same twice and assert behavior
+        //TODO: test uninstalling twice
 
-            policy.Execute(() =>
-            {
-                File.Delete(filePath);
-                Console.WriteLine($"Deleted font file {filePath}");
-            });
-        }
-
-        private void TryDeleteWithFontCacheService(string filePath)
-        {
-            Console.WriteLine("Attempting FontCache service management approach...");
-            try
-            {
-                StopFontCacheService();
-                // Wait for service to fully stop
-                Thread.Sleep(1000);
-
-                var policy = Policy
-                    .Handle<UnauthorizedAccessException>()
-                    .Or<IOException>()
-                    .WaitAndRetry(3, 
-                        retryAttempt => TimeSpan.FromMilliseconds(200),
-                        (exception, timeSpan, retryCount, context) =>
-                        {
-                            Console.WriteLine($"Attempt {retryCount} to delete file after FontCache stop failed: {exception.Message}");
-                        });
-
-                try
-                {
-                    policy.Execute(() =>
-                    {
-                        File.Delete(filePath);
-                        Console.WriteLine($"Deleted font file {filePath} after stopping FontCache");
-                    });
-                }
-                finally
-                {
-                    StartFontCacheService();
-                    // Wait for service to start before continuing
-                    Thread.Sleep(500);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to delete even after FontCache service management: {ex.Message}");
-            }
-        }
-
-        private void StopFontCacheService()
+        private void TryDeleteFile(string filePath)
         {
             try
             {
-                using (var process = new System.Diagnostics.Process())
-                {
-                    process.StartInfo.FileName = "net.exe";
-                    process.StartInfo.Arguments = "stop FontCache";
-                    process.StartInfo.UseShellExecute = false;
-                    process.StartInfo.CreateNoWindow = true;
-                    process.Start();
-                    process.WaitForExit(10000);
-                }
+                new WindowsFontInstaller().UninstallFont(filePath);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine($"Error stopping FontCache service: {ex.Message}");
-            }
-        }
-
-        private void StartFontCacheService()
-        {
-            try
-            {
-                using (var process = new System.Diagnostics.Process())
-                {
-                    process.StartInfo.FileName = "net.exe";
-                    process.StartInfo.Arguments = "start FontCache";
-                    process.StartInfo.UseShellExecute = false;
-                    process.StartInfo.CreateNoWindow = true;
-                    process.Start();
-                    process.WaitForExit(10000);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error starting FontCache service: {ex.Message}");
+                Console.WriteLine($"Failed to uninstall font {filePath}: {e.Message}");
             }
         }
 
@@ -415,7 +332,9 @@ namespace FontRegister.UnitTests
         {
             // Check in user font directory
             if (File.Exists(Path.Combine(_userFontDirectory, fontName + ".otf")) ||
-                File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttf")))
+                File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttf")) ||
+                File.Exists(Path.Combine(_userFontDirectory, fontName + ".fon")) ||
+                File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttc")))
             {
                 // Check registry
                 using (var fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts"))
