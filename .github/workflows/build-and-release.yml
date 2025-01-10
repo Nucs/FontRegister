@@ -234,29 +234,29 @@ jobs:
         $isPrerelease = $env:GITHUB_REF -match '.*(-alpha|-beta|-prerelease).*'
         "IS_PRERELEASE=$isPrerelease" >> $env:GITHUB_OUTPUT
 
-    - name: Create nupkgs directory
-      run: mkdir -p nupkgs
-
     - name: Build & Pack (Release)
       if: steps.check_prerelease.outputs.IS_PRERELEASE != 'True'
       run: |
-        dotnet build FontRegister/FontRegister.csproj --configuration Release -p:Version=${{ steps.get_version.outputs.VERSION }}
-        dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs --no-build -p:Version=${{ steps.get_version.outputs.VERSION }}
-        dir nupkgs
+        $outputPath = Join-Path $env:GITHUB_WORKSPACE "artifacts/nuget"
+        dotnet build $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release -p:Version=${{ steps.get_version.outputs.VERSION }}
+        dotnet pack $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release --output $outputPath --no-build -p:Version=${{ steps.get_version.outputs.VERSION }}
+        dir $outputPath
 
     - name: Build & Pack (Prerelease)
       if: steps.check_prerelease.outputs.IS_PRERELEASE == 'True'
       run: |
-        dotnet build FontRegister/FontRegister.csproj --configuration Release -p:Version=${{ steps.get_version.outputs.VERSION }}
-        dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs --no-build -p:Version=${{ steps.get_version.outputs.VERSION }}
-        dir nupkgs
+        $outputPath = Join-Path $env:GITHUB_WORKSPACE "artifacts/nuget"
+        dotnet build $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release -p:Version=${{ steps.get_version.outputs.VERSION }}
+        dotnet pack $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release --output $outputPath --no-build -p:Version=${{ steps.get_version.outputs.VERSION }}
+        dir $outputPath
 
     - name: Push to NuGet
       run: |
-        $package = Get-ChildItem nupkgs -Filter *.nupkg | Select-Object -First 1
+        $outputPath = Join-Path $env:GITHUB_WORKSPACE "artifacts/nuget"
+        $package = Get-ChildItem $outputPath -Filter *.nupkg | Select-Object -First 1
         if ($package) {
             dotnet nuget push $package.FullName --api-key ${{ secrets.NUGETAPIKEY }} --source https://api.nuget.org/v3/index.json
         } else {
-            Write-Error "No .nupkg file found in nupkgs directory"
+            Write-Error "No .nupkg file found in $outputPath"
             exit 1
         }
