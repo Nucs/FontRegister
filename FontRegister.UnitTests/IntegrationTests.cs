@@ -95,6 +95,7 @@ namespace FontRegister.UnitTests
             }
         }
 
+        //AI! only after trying without stopping, do a secondary approach that involves the FontCache service
         private void TryDeleteFile(string filePath, int maxRetries)
         {
             for (int i = 0; i < maxRetries; i++)
@@ -159,7 +160,7 @@ namespace FontRegister.UnitTests
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
                     process.Start();
-                    process.WaitForExit(5000);
+                    process.WaitForExit(10000);
                 }
             }
             catch (Exception ex)
@@ -179,7 +180,7 @@ namespace FontRegister.UnitTests
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.CreateNoWindow = true;
                     process.Start();
-                    process.WaitForExit(5000);
+                    process.WaitForExit(10000);
                 }
             }
             catch (Exception ex)
