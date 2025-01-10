@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using NUnit.Framework;
+using Polly;
 
 namespace FontRegister.UnitTests
 {
@@ -118,6 +119,7 @@ namespace FontRegister.UnitTests
             });
         }
 
+        //AI! use retry approach here too and wait a bit after stopping
         private void TryDeleteWithFontCacheService(string filePath)
         {
             Console.WriteLine("Attempting FontCache service management approach...");
