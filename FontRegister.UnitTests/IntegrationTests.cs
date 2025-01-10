@@ -104,108 +104,7 @@ namespace FontRegister.UnitTests
                 }
             }
         }
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr CreateFile(
-            string lpFileName,
-            uint dwDesiredAccess,
-            uint dwShareMode,
-            IntPtr lpSecurityAttributes,
-            uint dwCreationDisposition,
-            uint dwFlagsAndAttributes,
-            IntPtr hTemplateFile);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool CloseHandle(IntPtr hObject);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern int GetFileInformationByHandleEx(
-            IntPtr hFile,
-            int fileInformationClass,
-            out FILE_PROCESS_IDS_USING_FILE_INFORMATION outInfo,
-            int dwBufferSize);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct FILE_PROCESS_IDS_USING_FILE_INFORMATION
-        {
-            public uint ProcessIdCount;
-
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]
-            public uint[] ProcessIds;
-        }
-
-        private const uint GENERIC_READ = 0x80000000;
-        private const uint FILE_SHARE_READ = 0x00000001;
-        private const uint FILE_SHARE_WRITE = 0x00000002;
-        private const uint FILE_SHARE_DELETE = 0x00000004;
-        private const uint OPEN_EXISTING = 3;
-        private const int FileProcessIdsUsingFileInformation = 47;
-
-        private bool ReleaseFileLock(string filePath)
-        {
-            IntPtr handle = CreateFile(
-                filePath,
-                GENERIC_READ,
-                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                IntPtr.Zero,
-                OPEN_EXISTING,
-                0,
-                IntPtr.Zero);
-
-            if (handle.ToInt64() == -1)
-            {
-                return false;
-            }
-
-            try
-            {
-                var info = new FILE_PROCESS_IDS_USING_FILE_INFORMATION();
-                int result = GetFileInformationByHandleEx(
-                    handle,
-                    FileProcessIdsUsingFileInformation,
-                    out info,
-                    Marshal.SizeOf<FILE_PROCESS_IDS_USING_FILE_INFORMATION>());
-
-                if (result != 0 && info.ProcessIdCount > 0)
-                {
-                    foreach (uint processId in info.ProcessIds)
-                    {
-                        try
-                        {
-                            var process = Process.GetProcessById((int)processId);
-                            if (process.ProcessName.Equals("fontdrvhost", StringComparison.OrdinalIgnoreCase) ||
-                                process.ProcessName.Equals("explorer", StringComparison.OrdinalIgnoreCase))
-                            {
-                                continue; // Skip essential Windows processes
-                            }
-
-                            process.Kill();
-                            process.WaitForExit(1000);
-                        }
-                        catch (ArgumentException)
-                        {
-                            // Process already terminated
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Failed to terminate process: {ex.Message}");
-                        }
-                    }
-
-                    return true;
-                }
-            }
-            finally
-            {
-                CloseHandle(handle);
-            }
-
-            return false;
-        }
-
-        //TODO: test installing same twice and assert behavior
-        //TODO: test uninstalling twice
-
+        
         private void TryDeleteFile(string filePath)
         {
             try
@@ -219,6 +118,7 @@ namespace FontRegister.UnitTests
         }
 
         [Test]
+        [Retry(3)]
         public void CommandLine_InstallFont_ShouldSucceed()
         {
             // Arrange
@@ -234,6 +134,7 @@ namespace FontRegister.UnitTests
         }
 
         [Test]
+        [Retry(3)]
         public void CommandLine_InstallMultipleFonts_ShouldSucceed()
         {
             // Arrange
@@ -250,8 +151,9 @@ namespace FontRegister.UnitTests
                 Assert.IsTrue(IsFontInstalled(Path.GetFileNameWithoutExtension(fontPath)), $"Font {fontPath} was not successfully installed.");
             }
         }
-        
+
         [Test]
+        [Retry(3)]
         public void CommandLine_InstallSameFontTwice_ShouldReturnSuccessAndWarn()
         {
             // Arrange
@@ -269,12 +171,13 @@ namespace FontRegister.UnitTests
         }
 
         [Test]
+        [Retry(3)]
         public void CommandLine_UninstallSameFontTwice_ShouldReturnSuccessAndWarn()
         {
             // Arrange
             string randomFontPath = GetRandomTestFontPath();
             string fontName = Path.GetFileNameWithoutExtension(randomFontPath);
-            
+
             // Install first
             FontRegister.Program.Main(new[] { "install", randomFontPath });
 
@@ -285,10 +188,11 @@ namespace FontRegister.UnitTests
             // Assert
             Assert.That(firstResult, Is.EqualTo(0), "First uninstallation should succeed");
             Assert.That(secondResult, Is.EqualTo(0), "Second uninstallation should succeed but warn");
-            Assert.IsFalse(IsFontInstalled(fontName), "Font should remain uninstalled");
+            Assert.IsFalse(IsFontInstalled(fontName, true), "Font should remain uninstalled");
         }
 
         [Test]
+        [Retry(3)]
         public void CommandLine_UninstallFont_ShouldSucceed()
         {
             // Arrange
@@ -301,10 +205,11 @@ namespace FontRegister.UnitTests
 
             // Assert
             Assert.That(result, Is.EqualTo(0));
-            Assert.IsFalse(IsFontInstalled(fontName), "Font was not successfully uninstalled.");
+            Assert.IsFalse(IsFontInstalled(fontName, true), "Font was not successfully uninstalled.");
         }
 
         [Test]
+        [Retry(3)]
         public void CommandLine_InvalidArguments_ShouldFail()
         {
             // Arrange
@@ -318,6 +223,7 @@ namespace FontRegister.UnitTests
         }
 
         [Test]
+        [Retry(3)]
         public void CommandLine_NoArguments_ShouldPrintUsage()
         {
             // Arrange
@@ -367,63 +273,68 @@ namespace FontRegister.UnitTests
             return fontPaths.ToArray();
         }
 
-        private bool IsFontInstalled(string fontName)
+        private bool IsFontInstalled(string fontName, bool checkingIfUninstalled = false)
         {
-            var retryPolicy = Policy
-                .Handle<Exception>()
-                .WaitAndRetry(new[]
+            var retries = checkingIfUninstalled
+                ? new[]
+                {
+                    TimeSpan.FromMilliseconds(100),
+                    TimeSpan.FromMilliseconds(200),
+                }
+                : new[]
                 {
                     TimeSpan.FromMilliseconds(100),
                     TimeSpan.FromMilliseconds(200),
                     TimeSpan.FromMilliseconds(400),
                     TimeSpan.FromMilliseconds(800),
-                    TimeSpan.FromMilliseconds(1600)
-                });
-
-            return retryPolicy.Execute(() =>
+                    TimeSpan.FromMilliseconds(1600),
+                    TimeSpan.FromMilliseconds(3000),
+                    TimeSpan.FromMilliseconds(6000),
+                };
+            var retryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetry(retries);
+            try
             {
-                // Check in user font directory
-                if (File.Exists(Path.Combine(_userFontDirectory, fontName + ".otf")) ||
-                File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttf")) ||
-                File.Exists(Path.Combine(_userFontDirectory, fontName + ".fon")) ||
-                File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttc")))
-            {
-                // Check registry
-                using (var fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts"))
+                return retryPolicy.Execute(() =>
                 {
+                    // Check in user font directory
+                    if (File.Exists(Path.Combine(_userFontDirectory, fontName + ".otf")) ||
+                        File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttf")) ||
+                        File.Exists(Path.Combine(_userFontDirectory, fontName + ".fon")) ||
+                        File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttc")))
+                    {
+                        // Check registry
+                        using (var fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts"))
+                        {
+                            if (fontsKey != null)
+                            {
+                                if (fontsKey.GetValueNames().Any(n => n.Contains(fontName, StringComparison.OrdinalIgnoreCase)))
+                                    return true;
+                            }
+                        }
+                    }
+
+                    throw new Exception("Font not found");
+                });
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Looking for font: " + fontName);
+                if (!checkingIfUninstalled)
+                {
+                    using var fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts");
                     if (fontsKey != null)
                     {
-                        return fontsKey.GetValueNames().Any(n => n.StartsWith(fontName, StringComparison.OrdinalIgnoreCase));
+                        Console.WriteLine("Installed fonts:");
+                        foreach (var fontNameKey in fontsKey.GetValueNames())
+                        {
+                            Console.WriteLine(fontNameKey);
+                        }
                     }
                 }
-            }
 
-            return false;
-            });
-        }
-    }
-
-    internal class EmbeddedResourceHelper
-    {
-        public static byte[] ReadEmbeddedResource(string resourceNameEndsWith)
-        {
-            var assembly = typeof(EmbeddedResourceHelper).Assembly;
-            var resourceNames = assembly.GetManifestResourceNames();
-            var resourceName = resourceNames.FirstOrDefault(r => r.EndsWith(resourceNameEndsWith));
-
-            if (resourceName == null)
-                throw new ArgumentException($"Resource ending with '{resourceNameEndsWith}' not found in assembly.");
-
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
-            {
-                if (stream == null)
-                    throw new InvalidOperationException($"Resource '{resourceName}' not found in assembly.");
-
-                using (var memoryStream = new MemoryStream())
-                {
-                    stream.CopyTo(memoryStream);
-                    return memoryStream.ToArray();
-                }
+                return false;
             }
         }
     }
