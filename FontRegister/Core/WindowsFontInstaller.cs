@@ -51,8 +51,16 @@ public class WindowsFontInstaller : IFontInstaller
                 throw new InvalidOperationException("Failed to add font resource.");
             }
 
+            using (var currentVersion = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion"))
+            {
+                if (!currentVersion!.GetSubKeyNames().Contains("Fonts"))
+                {
+                    currentVersion.CreateSubKey("Fonts")!.Dispose();
+                }
+            }
+
             // Add to current user registry
-            using (RegistryKey fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", true))
+            using (RegistryKey fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", true)!)
             {
                 if (fontsKey == null)
                 {
@@ -108,7 +116,15 @@ public class WindowsFontInstaller : IFontInstaller
             File.Delete(fontPath);
 
             // Remove from current user registry
-            using (RegistryKey fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", true))
+            using (var currentVersion = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion"))
+            {
+                if (!currentVersion!.GetSubKeyNames().Contains("Fonts"))
+                {
+                    currentVersion.CreateSubKey("Fonts")!.Dispose();
+                }
+            }
+
+            using (RegistryKey fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", true)!)
             {
                 if (fontsKey == null)
                 {
