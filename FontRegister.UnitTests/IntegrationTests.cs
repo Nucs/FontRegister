@@ -95,7 +95,7 @@ namespace FontRegister.UnitTests
             }
         }
 
-        //AI! if deletion failed, we must stop FontCache service, delete and start again
+        //AI! if deletion failed, we must stop FontCache service, delete and start again 
         private void TryDeleteFile(string filePath, int maxRetries)
         {
             for (int i = 0; i < maxRetries; i++)
