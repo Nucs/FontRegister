@@ -146,22 +146,18 @@ jobs:
             -p:Version=${{ steps.get_version.outputs.VERSION }}
         fi
 
-    - name: Create ZIP Archive and Upload
+    - name: Create ZIP Archive
       shell: pwsh
       run: |
         $frameworkName = "${{ matrix.framework }}" -replace "-windows$",""
         cd publish/${{ matrix.framework }}/${{ matrix.runtime }}
         zip -r "../../../FontRegister-$frameworkName-${{ matrix.runtime }}.zip" ./*
-        
-        # Upload as artifact
-        $artifactPath = "../../../FontRegister-$frameworkName-${{ matrix.runtime }}.zip"
-        Write-Host "::set-output name=artifact_path::$artifactPath"
       
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
         name: FontRegister-${{ matrix.framework }}-${{ matrix.runtime }}
-        path: ${{ steps.create_zip.outputs.artifact_path }}
+        path: FontRegister-${{ matrix.framework -replace "-windows$",""}}-${{ matrix.runtime }}.zip
         retention-days: 5
 
   create-release:
