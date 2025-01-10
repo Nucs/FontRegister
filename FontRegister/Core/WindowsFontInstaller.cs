@@ -161,6 +161,9 @@ public class WindowsFontInstaller : IFontInstaller
             "Microsoft", "Windows", "Fonts"
         );
 
+        //normalize path
+        localFontDir = Path.GetFullPath(localFontDir);
+
         Directory.CreateDirectory(localFontDir);
         return localFontDir;
     }
