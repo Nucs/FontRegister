@@ -95,9 +95,9 @@ namespace FontRegister.UnitTests
             }
         }
 
-        //AI! only after trying without stopping, do a secondary approach that involves the FontCache service
         private void TryDeleteFile(string filePath, int maxRetries)
         {
+            // First try normal deletion attempts
             for (int i = 0; i < maxRetries; i++)
             {
                 try
@@ -108,44 +108,41 @@ namespace FontRegister.UnitTests
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    if (i == maxRetries - 1)
+                    if (i == maxRetries - 1) 
                     {
-                        Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts. Trying to stop FontCache service...");
-                        StopFontCacheService();
-                        try
-                        {
-                            File.Delete(filePath);
-                            Console.WriteLine($"Deleted font file {filePath} after stopping FontCache");
-                            StartFontCacheService();
-                            return;
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Failed to delete even after stopping FontCache: {ex.Message}");
-                        }
+                        Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts");
                     }
                     System.Threading.Thread.Sleep(200);
                 }
                 catch (IOException)
                 {
-                    if (i == maxRetries - 1)
+                    if (i == maxRetries - 1) 
                     {
-                        Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts. Trying to stop FontCache service...");
-                        StopFontCacheService();
-                        try
-                        {
-                            File.Delete(filePath);
-                            Console.WriteLine($"Deleted font file {filePath} after stopping FontCache");
-                            StartFontCacheService();
-                            return;
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Failed to delete even after stopping FontCache: {ex.Message}");
-                        }
+                        Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts");
                     }
                     System.Threading.Thread.Sleep(200);
                 }
+            }
+
+            // If normal attempts fail, try with FontCache service management
+            Console.WriteLine("Attempting FontCache service management approach...");
+            try
+            {
+                StopFontCacheService();
+                try
+                {
+                    File.Delete(filePath);
+                    Console.WriteLine($"Deleted font file {filePath} after stopping FontCache");
+                    return;
+                }
+                finally
+                {
+                    StartFontCacheService();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to delete even after FontCache service management: {ex.Message}");
             }
         }
 
