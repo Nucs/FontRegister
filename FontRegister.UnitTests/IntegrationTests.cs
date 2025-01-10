@@ -95,7 +95,6 @@ namespace FontRegister.UnitTests
             }
         }
 
-        //AI! if deletion failed, we must stop FontCache service, delete and start again 
         private void TryDeleteFile(string filePath, int maxRetries)
         {
             for (int i = 0; i < maxRetries; i++)
@@ -108,16 +107,84 @@ namespace FontRegister.UnitTests
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    if (i == maxRetries - 1) Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts. Retrying...");
-
-                    System.Threading.Thread.Sleep(200); // Wait a bit before retrying
+                    if (i == maxRetries - 1)
+                    {
+                        Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts. Trying to stop FontCache service...");
+                        StopFontCacheService();
+                        try
+                        {
+                            File.Delete(filePath);
+                            Console.WriteLine($"Deleted font file {filePath} after stopping FontCache");
+                            StartFontCacheService();
+                            return;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to delete even after stopping FontCache: {ex.Message}");
+                        }
+                    }
+                    System.Threading.Thread.Sleep(200);
                 }
                 catch (IOException)
                 {
-                    if (i == maxRetries - 1) Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts. Retrying...");
-
-                    System.Threading.Thread.Sleep(200); // Wait a bit before retrying
+                    if (i == maxRetries - 1)
+                    {
+                        Console.WriteLine($"Failed to delete font file {filePath} after {maxRetries} attempts. Trying to stop FontCache service...");
+                        StopFontCacheService();
+                        try
+                        {
+                            File.Delete(filePath);
+                            Console.WriteLine($"Deleted font file {filePath} after stopping FontCache");
+                            StartFontCacheService();
+                            return;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to delete even after stopping FontCache: {ex.Message}");
+                        }
+                    }
+                    System.Threading.Thread.Sleep(200);
                 }
+            }
+        }
+
+        private void StopFontCacheService()
+        {
+            try
+            {
+                using (var process = new System.Diagnostics.Process())
+                {
+                    process.StartInfo.FileName = "net.exe";
+                    process.StartInfo.Arguments = "stop FontCache";
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
+                    process.Start();
+                    process.WaitForExit(5000);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error stopping FontCache service: {ex.Message}");
+            }
+        }
+
+        private void StartFontCacheService()
+        {
+            try
+            {
+                using (var process = new System.Diagnostics.Process())
+                {
+                    process.StartInfo.FileName = "net.exe";
+                    process.StartInfo.Arguments = "start FontCache";
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
+                    process.Start();
+                    process.WaitForExit(5000);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error starting FontCache service: {ex.Message}");
             }
         }
 
