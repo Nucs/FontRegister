@@ -1,16 +1,16 @@
-﻿namespace FontRegister.UnitTests;
-
-public class Program
+﻿namespace FontRegister.UnitTests
 {
-    public static void Main()
+    public class Program
     {
-//single file
-var notifier = new WindowsFontInstaller(new WindowsSystemNotifier());
-notifier.InstallFont("C:/myfonts/myfont.ttf");
+        public static void Main()
+        {
+            //single file
+            var notifier = new WindowsFontInstaller(new WindowsSystemNotifier());
+            notifier.InstallFont("C:/myfonts/myfont.ttf");
 
-//in bulk
-var fontManager = new FontManager(notifier);
-fontManager.InstallFonts(new string[] { "C:/myfonts", "C:/myfonts2/myfont.ttf" });
-        
+            //in bulk
+            var fontManager = new FontManager(notifier);
+            fontManager.InstallFonts(new string[] { "C:/myfonts", "C:/myfonts2/myfont.ttf" });
+        }
     }
 }
