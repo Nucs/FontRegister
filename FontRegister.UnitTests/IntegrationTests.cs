@@ -119,21 +119,38 @@ namespace FontRegister.UnitTests
             });
         }
 
-        //AI! use retry approach here too and wait a bit after stopping
         private void TryDeleteWithFontCacheService(string filePath)
         {
             Console.WriteLine("Attempting FontCache service management approach...");
             try
             {
                 StopFontCacheService();
+                // Wait for service to fully stop
+                Thread.Sleep(1000);
+
+                var policy = Policy
+                    .Handle<UnauthorizedAccessException>()
+                    .Or<IOException>()
+                    .WaitAndRetry(3, 
+                        retryAttempt => TimeSpan.FromMilliseconds(200),
+                        (exception, timeSpan, retryCount, context) =>
+                        {
+                            Console.WriteLine($"Attempt {retryCount} to delete file after FontCache stop failed: {exception.Message}");
+                        });
+
                 try
                 {
-                    File.Delete(filePath);
-                    Console.WriteLine($"Deleted font file {filePath} after stopping FontCache");
+                    policy.Execute(() =>
+                    {
+                        File.Delete(filePath);
+                        Console.WriteLine($"Deleted font file {filePath} after stopping FontCache");
+                    });
                 }
                 finally
                 {
                     StartFontCacheService();
+                    // Wait for service to start before continuing
+                    Thread.Sleep(500);
                 }
             }
             catch (Exception ex)
