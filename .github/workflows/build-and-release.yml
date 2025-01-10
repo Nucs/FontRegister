@@ -117,6 +117,13 @@ jobs:
         dotnet-version: |
           6.0.x
           8.0.x
+
+    - name: Extract Version
+      id: get_version
+      shell: bash
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           
     - name: Publish
       run: |
@@ -126,7 +133,8 @@ jobs:
             --framework ${{ matrix.framework }} \
             --runtime ${{ matrix.runtime }} \
             --self-contained true \
-            --output publish/${{ matrix.framework }}/${{ matrix.runtime }}
+            --output publish/${{ matrix.framework }}/${{ matrix.runtime }} \
+            -p:Version=${{ steps.get_version.outputs.VERSION }}
         else
           dotnet publish FontRegister/FontRegister.csproj \
             --configuration Release \
@@ -134,7 +142,8 @@ jobs:
             --runtime ${{ matrix.runtime }} \
             --self-contained true \
             -p:PublishSingleFile=true \
-            --output publish/${{ matrix.framework }}/${{ matrix.runtime }}
+            --output publish/${{ matrix.framework }}/${{ matrix.runtime }} \
+            -p:Version=${{ steps.get_version.outputs.VERSION }}
         fi
 
     - name: Create ZIP Archive
@@ -211,28 +220,31 @@ jobs:
           6.0.x
           8.0.x
 
+    - name: Extract Version
+      id: get_version
+      shell: pwsh
+      run: |
+        $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
+        "VERSION=$version" >> $env:GITHUB_OUTPUT
+
     - name: Check if Prerelease
       id: check_prerelease
       shell: pwsh
       run: |
         $isPrerelease = $env:GITHUB_REF -match '.*(-alpha|-beta|-prerelease).*'
         "IS_PRERELEASE=$isPrerelease" >> $env:GITHUB_OUTPUT
-        if ($isPrerelease) {
-          $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
-          "VERSION_SUFFIX=$version" >> $env:GITHUB_OUTPUT
-        }
 
     - name: Build & Pack (Release)
       if: steps.check_prerelease.outputs.IS_PRERELEASE != 'True'
       run: |
-        dotnet build FontRegister/FontRegister.csproj --configuration Release
-        dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs --no-build
+        dotnet build FontRegister/FontRegister.csproj --configuration Release -p:Version=${{ steps.get_version.outputs.VERSION }}
+        dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs --no-build -p:Version=${{ steps.get_version.outputs.VERSION }}
 
     - name: Build & Pack (Prerelease)
       if: steps.check_prerelease.outputs.IS_PRERELEASE == 'True'
       run: |
-        dotnet build FontRegister/FontRegister.csproj --configuration Release
-        dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs --no-build --version-suffix ${{ steps.check_prerelease.outputs.VERSION_SUFFIX }}
+        dotnet build FontRegister/FontRegister.csproj --configuration Release -p:Version=${{ steps.get_version.outputs.VERSION }}
+        dotnet pack FontRegister/FontRegister.csproj --configuration Release --output nupkgs --no-build -p:Version=${{ steps.get_version.outputs.VERSION }}
 
     - name: Push to NuGet
       run: dotnet nuget push nupkgs/*.nupkg --api-key ${{ secrets.NUGETAPIKEY }} --source https://api.nuget.org/v3/index.json
