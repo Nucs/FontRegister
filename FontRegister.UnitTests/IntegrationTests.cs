@@ -52,6 +52,8 @@ namespace FontRegister.UnitTests
         [TearDown]
         public void TearDown()
         {
+            Console.WriteLine("Test Completed");
+            Console.WriteLine("---");
             CleanupTestFonts();
             try
             {
@@ -367,6 +369,7 @@ namespace FontRegister.UnitTests
 
         private bool IsFontInstalled(string fontName)
         {
+            //AI! retry policy 5 attempts, 100ms, 200ms, 400ms, 800ms, 1600ms
             // Check in user font directory
             if (File.Exists(Path.Combine(_userFontDirectory, fontName + ".otf")) ||
                 File.Exists(Path.Combine(_userFontDirectory, fontName + ".ttf")) ||
