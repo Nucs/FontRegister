@@ -146,7 +146,7 @@ public class WindowsFontInstaller : IFontInstaller
 
             Console.WriteLine($"Font {fontName} uninstalled successfully.");
 
-            _systemNotifier.NotifyFontChange();
+            _systemNotifier?.NotifyFontChange();
         }
         catch (Exception ex)
         {
