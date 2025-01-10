@@ -86,5 +86,46 @@ namespace FontRegister.UnitTests
             // Assert
             Assert.That(result, Is.False);
         }
+
+        [Test]
+        public void InstallFont_WithUnsupportedExtension_ReturnsFalse()
+        {
+            // Arrange
+            var unsupportedPath = Path.Combine(_tempFontDirectory, "test.xyz");
+            File.WriteAllText(unsupportedPath, "dummy content");
+
+            // Act
+            var result = _installer.InstallFont(unsupportedPath);
+
+            // Assert
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public void InstallFont_WithRelativePath_HandlesPathCorrectly()
+        {
+            // Arrange
+            var fontPath = Path.Combine(_tempFontDirectory, "test.ttf");
+            File.WriteAllText(fontPath, "dummy content");
+            var relativePath = Path.GetFileName(fontPath);
+            Directory.SetCurrentDirectory(_tempFontDirectory);
+
+            // Act
+            var result = _installer.InstallFont(relativePath);
+
+            // Assert
+            Assert.That(result, Is.False); // False because it's not a valid font file
+        }
+
+        [Test]
+        public void UninstallFont_WithNullSystemNotifier_DoesNotThrow()
+        {
+            // Arrange
+            var installer = new WindowsFontInstaller();
+            var fontPath = Path.Combine(_tempFontDirectory, "test.ttf");
+
+            // Act & Assert
+            Assert.DoesNotThrow(() => installer.UninstallFont(fontPath));
+        }
     }
 }

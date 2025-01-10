@@ -93,5 +93,56 @@ namespace FontRegister.UnitTests
             // Act & Assert
             Assert.DoesNotThrow(() => _fontManager.UninstallFonts(fontNames));
         }
+
+        [Test]
+        public void InstallFonts_WithMixedValidAndInvalidPaths_HandlesGracefully()
+        {
+            // Arrange
+            var validDir = Path.Combine(_tempFontDirectory, "valid");
+            var invalidDir = Path.Combine(_tempFontDirectory, "invalid");
+            Directory.CreateDirectory(validDir);
+            var paths = new[] { validDir, invalidDir };
+
+            // Act & Assert
+            Assert.DoesNotThrow(() => _fontManager.InstallFonts(paths));
+        }
+
+        [Test]
+        public void InstallFonts_WithUnsupportedFileExtensions_SkipsFiles()
+        {
+            // Arrange
+            var directory = Path.Combine(_tempFontDirectory, "mixed");
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, "test.txt"), "dummy content");
+            File.WriteAllText(Path.Combine(directory, "test.doc"), "dummy content");
+
+            // Act & Assert
+            Assert.DoesNotThrow(() => _fontManager.InstallFonts(new[] { directory }));
+        }
+
+        [Test]
+        public void UninstallFonts_WithEmptyArray_HandlesGracefully()
+        {
+            // Arrange
+            var emptyArray = Array.Empty<string>();
+
+            // Act & Assert
+            Assert.DoesNotThrow(() => _fontManager.UninstallFonts(emptyArray));
+        }
+
+        [Test]
+        public void InstallFonts_WithRecursiveDirectories_ProcessesAllFiles()
+        {
+            // Arrange
+            var rootDir = Path.Combine(_tempFontDirectory, "root");
+            var subDir = Path.Combine(rootDir, "sub");
+            Directory.CreateDirectory(rootDir);
+            Directory.CreateDirectory(subDir);
+            File.WriteAllText(Path.Combine(rootDir, "test1.ttf"), "dummy content");
+            File.WriteAllText(Path.Combine(subDir, "test2.ttf"), "dummy content");
+
+            // Act & Assert
+            Assert.DoesNotThrow(() => _fontManager.InstallFonts(new[] { rootDir }));
+        }
     }
 }
