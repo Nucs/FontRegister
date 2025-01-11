@@ -35,27 +35,19 @@ public class WindowsMachineFontInstaller : IFontInstaller
             var fontName = Path.GetFileNameWithoutExtension(fontPath);
             fontName = char.ToUpper(fontName[0]) + fontName.Substring(1); //first letter capital
 
-            var localFontDir = FontConsts.GetMachineFontDirectory();
+            var fontDir = FontConsts.GetMachineFontDirectory();
 
             //check if font already installed, our normalized version vs given version
-            if (File.Exists(Path.Combine(localFontDir, fileName)) || File.Exists(Path.Combine(localFontDir, Path.GetFileName(fontPath))))
+            if (File.Exists(Path.Combine(fontDir, fileName)) || File.Exists(Path.Combine(fontDir, Path.GetFileName(fontPath))))
             {
                 Console.WriteLine($"{fileName}: Font already installed.");
                 return false;
             }
 
             // Adjust font name based on file type
-            var registryFontName = fileExtension switch
-            {
-                //similar behavior in default windows font installer
-                ".otf" => $"{fontName} (OpenType)",
-                ".ttc" => $"{fontName} (TrueType)",
-                ".fon" => $"{fontName} (VGA res)",
-                ".fnt" => fontName,
-                _ => fontName
-            };
+            var registryFontName = FontConsts.GetRegistryFontName(fileExtension, fontName);
 
-            var destPath = Path.Combine(localFontDir, fileName);
+            var destPath = Path.Combine(fontDir, fileName);
 
             // Copy the font file
             int copyAttempts = 0;
@@ -82,7 +74,7 @@ public class WindowsMachineFontInstaller : IFontInstaller
                 throw new InvalidOperationException($"{fileName}: Failed to add font resource.");
             }
 
-            using (var currentVersion = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion"))
+            using (var currentVersion = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion"))
             {
                 if (!currentVersion!.GetSubKeyNames().Contains(FontConsts.FontRegistryKeyName))
                 {
@@ -90,8 +82,8 @@ public class WindowsMachineFontInstaller : IFontInstaller
                 }
             }
 
-            // Add to current user registry
-            using (var fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", true)!)
+            // Add to current machine registry
+            using (var fontsKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", true)!)
             {
                 if (fontsKey == null)
                 {
@@ -122,7 +114,7 @@ public class WindowsMachineFontInstaller : IFontInstaller
             if (fontNameOrPath.Contains("\\") || fontNameOrPath.Contains("/") || Path.IsPathRooted(fontNameOrPath) || fontNameOrPath.Contains(".."))
                 fontNameOrPath = Path.GetFullPath(fontNameOrPath).Replace("/", "\\"); //normalize
 
-            var localFontDir = FontConsts.GetMachineFontDirectory();
+            var fontDir = FontConsts.GetMachineFontDirectory();
             //handle full path inside local font directory passed
             if (Path.IsPathRooted(fontNameOrPath))
             {
@@ -130,8 +122,8 @@ public class WindowsMachineFontInstaller : IFontInstaller
                 fileName = Path.ChangeExtension(fileName, Path.GetExtension(fileName)?.ToLower());
                 fontNameOrPath = Path.GetFullPath(fontNameOrPath).Replace("/", "\\"); //normalize
                 fontPath = fontNameOrPath;
-                if (!fontNameOrPath.StartsWith(localFontDir, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException($"{fileName}: Cannot uninstall fonts outside the local font directory, path: {fontNameOrPath}, expected: {Path.Combine(localFontDir, fontNameOrPath)}");
+                if (!fontNameOrPath.StartsWith(fontDir, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException($"{fileName}: Cannot uninstall fonts outside the local font directory, path: {fontNameOrPath}, expected: {Path.Combine(fontDir, fontNameOrPath)}");
             }
             else
             {
@@ -142,7 +134,7 @@ public class WindowsMachineFontInstaller : IFontInstaller
                     foreach (var ext in FontConsts.SupportedExtensions)
                     {
                         var potentialFileName = fontNameOrPath + ext;
-                        var potentialPath = Path.Combine(localFontDir, potentialFileName);
+                        var potentialPath = Path.Combine(fontDir, potentialFileName);
                         if (File.Exists(potentialPath))
                         {
                             if (fontPath != null)
@@ -158,7 +150,7 @@ public class WindowsMachineFontInstaller : IFontInstaller
                     //handle font name with extension passed
                     fileName = fontNameOrPath;
                     fileName = Path.ChangeExtension(fileName, Path.GetExtension(fileName)?.ToLower());
-                    fontPath = Path.Combine(localFontDir, fontNameOrPath);
+                    fontPath = Path.Combine(fontDir, fontNameOrPath);
                     if (!FontConsts.SupportedExtensions.Contains(Path.GetExtension(fontNameOrPath), StringComparer.OrdinalIgnoreCase))
                         throw new InvalidOperationException($"{fileName}: Unsupported font extension: {Path.GetExtension(fontNameOrPath)}");
                 }
@@ -216,7 +208,7 @@ public class WindowsMachineFontInstaller : IFontInstaller
             }
 
             // Ensure fonts registry key exists
-            using (var currentVersion = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion"))
+            using (var currentVersion = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion"))
             {
                 if (!currentVersion!.GetSubKeyNames().Contains(FontConsts.FontRegistryKeyName))
                 {
@@ -224,7 +216,7 @@ public class WindowsMachineFontInstaller : IFontInstaller
                 }
             }
 
-            // Remove from current user registry
+            // Remove from current machine registry
             using (var fontsKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", true)!)
             {
                 if (fontsKey == null)

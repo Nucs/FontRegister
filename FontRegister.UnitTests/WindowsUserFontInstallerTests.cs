@@ -121,11 +121,10 @@ namespace FontRegister.UnitTests
         public void UninstallFont_WithNullSystemNotifier_DoesNotThrow()
         {
             // Arrange
-            var installer = new WindowsUserFontInstaller();
             var fontPath = Path.Combine(_tempFontDirectory, "test.ttf");
 
             // Act & Assert
-            Assert.DoesNotThrow(() => installer.UninstallFont(fontPath));
+            Assert.DoesNotThrow(() => _installer.UninstallFont(fontPath));
         }
     }
 }

@@ -35,10 +35,10 @@ public class WindowsUserFontInstaller : IFontInstaller
             var fontName = Path.GetFileNameWithoutExtension(fontPath);
             fontName = char.ToUpper(fontName[0]) + fontName.Substring(1); //first letter capital
 
-            var localFontDir = FontConsts.GetLocalFontDirectory();
+            var fontDir = FontConsts.GetLocalFontDirectory();
 
             //check if font already installed, our normalized version vs given version
-            if (File.Exists(Path.Combine(localFontDir, fileName)) || File.Exists(Path.Combine(localFontDir, Path.GetFileName(fontPath))))
+            if (File.Exists(Path.Combine(fontDir, fileName)) || File.Exists(Path.Combine(fontDir, Path.GetFileName(fontPath))))
             {
                 Console.WriteLine($"{fileName}: Font already installed.");
                 return false;
@@ -47,7 +47,7 @@ public class WindowsUserFontInstaller : IFontInstaller
             // Adjust font name based on file type
             var registryFontName = FontConsts.GetRegistryFontName(fileExtension, fontName);
 
-            var destPath = Path.Combine(localFontDir, fileName);
+            var destPath = Path.Combine(fontDir, fileName);
 
             // Copy the font file
             int copyAttempts = 0;
@@ -114,7 +114,7 @@ public class WindowsUserFontInstaller : IFontInstaller
             if (fontNameOrPath.Contains("\\") || fontNameOrPath.Contains("/") || Path.IsPathRooted(fontNameOrPath) || fontNameOrPath.Contains(".."))
                 fontNameOrPath = Path.GetFullPath(fontNameOrPath).Replace("/", "\\"); //normalize
 
-            var localFontDir = FontConsts.GetLocalFontDirectory();
+            var fontDir = FontConsts.GetLocalFontDirectory();
             //handle full path inside local font directory passed
             if (Path.IsPathRooted(fontNameOrPath))
             {
@@ -122,8 +122,8 @@ public class WindowsUserFontInstaller : IFontInstaller
                 fileName = Path.ChangeExtension(fileName, Path.GetExtension(fileName)?.ToLower());
                 fontNameOrPath = Path.GetFullPath(fontNameOrPath).Replace("/", "\\"); //normalize
                 fontPath = fontNameOrPath;
-                if (!fontNameOrPath.StartsWith(localFontDir, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException($"{fileName}: Cannot uninstall fonts outside the local font directory, path: {fontNameOrPath}, expected: {Path.Combine(localFontDir, fontNameOrPath)}");
+                if (!fontNameOrPath.StartsWith(fontDir, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException($"{fileName}: Cannot uninstall fonts outside the local font directory, path: {fontNameOrPath}, expected: {Path.Combine(fontDir, fontNameOrPath)}");
             }
             else
             {
@@ -134,7 +134,7 @@ public class WindowsUserFontInstaller : IFontInstaller
                     foreach (var ext in FontConsts.SupportedExtensions)
                     {
                         var potentialFileName = fontNameOrPath + ext;
-                        var potentialPath = Path.Combine(localFontDir, potentialFileName);
+                        var potentialPath = Path.Combine(fontDir, potentialFileName);
                         if (File.Exists(potentialPath))
                         {
                             if (fontPath != null)
@@ -150,7 +150,7 @@ public class WindowsUserFontInstaller : IFontInstaller
                     //handle font name with extension passed
                     fileName = fontNameOrPath;
                     fileName = Path.ChangeExtension(fileName, Path.GetExtension(fileName)?.ToLower());
-                    fontPath = Path.Combine(localFontDir, fontNameOrPath);
+                    fontPath = Path.Combine(fontDir, fontNameOrPath);
                     if (!FontConsts.SupportedExtensions.Contains(Path.GetExtension(fontNameOrPath), StringComparer.OrdinalIgnoreCase))
                         throw new InvalidOperationException($"{fileName}: Unsupported font extension: {Path.GetExtension(fontNameOrPath)}");
                 }

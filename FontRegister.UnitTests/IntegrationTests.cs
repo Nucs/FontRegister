@@ -93,7 +93,6 @@ namespace FontRegister.UnitTests
             }
         }
 
-        //AI! this method needs to support scope
         private void CleanupTestFonts()
         {
             var regex = new Regex(TEST_FONT_PATTERN, RegexOptions.IgnoreCase);
@@ -136,7 +135,14 @@ namespace FontRegister.UnitTests
         {
             try
             {
-                new WindowsUserFontInstaller().UninstallFont(filePath);
+                if (_scope == InstallationScope.Machine)
+                {
+                    new WindowsMachineFontInstaller().UninstallFont(filePath);
+                }
+                else
+                {
+                    new WindowsUserFontInstaller().UninstallFont(filePath);
+                }
             }
             catch (Exception e)
             {
@@ -279,9 +285,9 @@ namespace FontRegister.UnitTests
             string fontPath = Path.Combine(_tempFontDirectory, $"{fontName}{Path.GetExtension(FileName)}");
 
             // Create a minimal OTF file
-            byte[] minimalOtfFile = EmbeddedResourceHelper.ReadEmbeddedResource(FileName);
+            byte[] fontFile = EmbeddedResourceHelper.ReadEmbeddedResource(FileName);
 
-            File.WriteAllBytes(fontPath, minimalOtfFile);
+            File.WriteAllBytes(fontPath, fontFile);
 
             return fontPath;
         }

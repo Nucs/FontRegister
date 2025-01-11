@@ -13,16 +13,16 @@ public static class FontConsts
 
     public static string GetLocalFontDirectory()
     {
-        var localFontDir = Path.Combine(
+        var fontDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Microsoft", "Windows", "Fonts"
         );
 
         //normalize path
-        localFontDir = Path.GetFullPath(localFontDir).Replace("/", "\\");
+        fontDir = Path.GetFullPath(fontDir).Replace("/", "\\");
 
-        Directory.CreateDirectory(localFontDir);
-        return localFontDir;
+        Directory.CreateDirectory(fontDir);
+        return fontDir;
     }
 
     public static string GetMachineFontDirectory()
