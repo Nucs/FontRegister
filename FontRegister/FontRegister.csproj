@@ -41,6 +41,9 @@
         <None Remove="FontRegister.csproj.DotSettings" />
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
+    </ItemGroup>
+    <ItemGroup>
       <Content Include="Properties\icon.ico" Pack="true" PackagePath="" />
       <Content Include="Properties\icon.png" Pack="true" PackagePath="" />
     </ItemGroup>
