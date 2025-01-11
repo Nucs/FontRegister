@@ -17,6 +17,7 @@ namespace FontRegister.UnitTests
             _tempFontDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_tempFontDirectory);
             _installer = new WindowsUserFontInstaller(new WindowsSystemNotifier());
+            Console.SetOut(new StringWriter()); // Reset console output
         }
 
         [TearDown]
@@ -49,11 +50,21 @@ namespace FontRegister.UnitTests
             if (!Path.HasExtension(normalizedName))
                 normalizedName += ".ttf";
 
+            // Arrange console capture
+            var consoleOutput = new StringWriter();
+            Console.SetOut(consoleOutput);
+
+            // Arrange console capture
+            var consoleOutput = new StringWriter();
+            Console.SetOut(consoleOutput);
+
             // Act
             var result = _installer.UninstallFont(normalizedName);
 
             // Assert
             Assert.That(result, Is.False, "Should return false for non-existent font");
+            Assert.That(consoleOutput.ToString(), Does.Contain("Font not found anywhere"), "Expected console output not found");
+            Assert.That(consoleOutput.ToString(), Does.Contain("Font not found anywhere"), "Expected console output not found");
         }
 
         [Test]
@@ -62,11 +73,16 @@ namespace FontRegister.UnitTests
             // Arrange
             var invalidPath = Path.Combine(_tempFontDirectory, "NonExistentFont.ttf");
 
+            // Arrange console capture
+            var consoleOutput = new StringWriter();
+            Console.SetOut(consoleOutput);
+
             // Act
             var result = _installer.InstallFont(invalidPath);
 
             // Assert
             Assert.That(result, Is.False);
+            Assert.That(consoleOutput.ToString(), Does.Contain("Font file path not found"), "Expected console output not found");
         }
 
         [Test]
