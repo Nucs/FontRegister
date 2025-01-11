@@ -1,3 +1,5 @@
+#AI! add $PreviousTag optional parameter
+
 param (
     [Parameter(Mandatory=$true)]
     [string]$CurrentTag
