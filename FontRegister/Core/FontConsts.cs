@@ -58,6 +58,19 @@ public static class FontConsts
         Directory.CreateDirectory(machineFontDir);
         return machineFontDir;
     }
+    
+    public static IEnumerable<string> GetFontCacheDirectories()
+    {
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        
+        //AI! System.UnauthorizedAccessException: Access to the path 'C:\Users\ELI\AppData\Local\Application Data' is denied.
+        //    I need you to iteratively go over all directories and skip those with no access. I cant use GetDirectories with SearchOption.AllDirectories
+        var ext = Directory.GetDirectories(localAppData, "FontCache", SearchOption.AllDirectories);
+
+        //normalize path
+        return ext.Select(Path.GetFullPath).Select(x => x.Replace("/", "\\")).ToArray();
+    }
+
 
     /// <summary>
     /// Formats the font name for registry storage based on its file extension.
