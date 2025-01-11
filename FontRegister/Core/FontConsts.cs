@@ -1,5 +1,8 @@
 ﻿namespace FontRegister;
 
+/// <summary>
+/// Contains constant values and utility methods for font management.
+/// </summary>
 public static class FontConsts
 {
     /// <summary>
