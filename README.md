@@ -89,5 +89,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Acknowledgements
 
-- [FontReg](http://code.kliu.org/misc/fontreg/) for the underlying functionality.
 - All contributors and users for their support.
