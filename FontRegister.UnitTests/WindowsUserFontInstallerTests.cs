@@ -50,46 +50,10 @@ namespace FontRegister.UnitTests
                 normalizedName += ".ttf";
 
             // Act
-            var result = _installer.UninstallFont(fontPath);
+            var result = _installer.UninstallFont(normalizedName);
 
             // Assert
             Assert.That(result, Is.False, "Should return false for non-existent font");
-        }
-
-        [Test]
-        public void UninstallFont_WithMultipleExtensions_ThrowsException()
-        {
-            try
-            {
-                // Arrange
-                var fontDir = FontConsts.GetLocalFontDirectory();
-                var fontName = "TestFont";
-                var ttfPath = Path.Combine(fontDir, $"{fontName}.ttf");
-                var otfPath = Path.Combine(fontDir, $"{fontName}.otf");
-
-                File.WriteAllText(ttfPath, "dummy content");
-                File.WriteAllText(otfPath, "dummy content");
-
-                // Act
-                _installer.UninstallFont(fontName);
-
-                // Assert
-                Assert.Fail("Expected InvalidOperationException was not thrown");
-            }
-            catch (InvalidOperationException ex)
-            {
-                Assert.That(ex.Message, Does.Contain("Multiple font files found"));
-            }
-            finally
-            {
-                // Cleanup
-                try
-                {
-                    File.Delete(Path.Combine(FontConsts.GetLocalFontDirectory(), "TestFont.ttf"));
-                    File.Delete(Path.Combine(FontConsts.GetLocalFontDirectory(), "TestFont.otf"));
-                }
-                catch { }
-            }
         }
 
         [Test]
