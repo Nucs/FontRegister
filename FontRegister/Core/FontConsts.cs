@@ -62,13 +62,41 @@ public static class FontConsts
     public static IEnumerable<string> GetFontCacheDirectories()
     {
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var results = new List<string>();
         
-        //AI! System.UnauthorizedAccessException: Access to the path 'C:\Users\ELI\AppData\Local\Application Data' is denied.
-        //    I need you to iteratively go over all directories and skip those with no access. I cant use GetDirectories with SearchOption.AllDirectories
-        var ext = Directory.GetDirectories(localAppData, "FontCache", SearchOption.AllDirectories);
+        void SearchDirectory(string directory)
+        {
+            try
+            {
+                // Check current directory for FontCache folders
+                foreach (var dir in Directory.GetDirectories(directory, "FontCache"))
+                {
+                    results.Add(Path.GetFullPath(dir).Replace("/", "\\"));
+                }
 
-        //normalize path
-        return ext.Select(Path.GetFullPath).Select(x => x.Replace("/", "\\")).ToArray();
+                // Recursively search subdirectories
+                foreach (var dir in Directory.GetDirectories(directory))
+                {
+                    try
+                    {
+                        SearchDirectory(dir);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // Skip directories we can't access
+                        continue;
+                    }
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Skip directories we can't access
+                return;
+            }
+        }
+
+        SearchDirectory(localAppData);
+        return results;
     }
 
 
