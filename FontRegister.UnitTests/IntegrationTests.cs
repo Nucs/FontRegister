@@ -39,7 +39,7 @@ namespace FontRegister.UnitTests
 
         private Random _random = new Random();
         private string _tempFontDirectory;
-        private string _userFontDirectory;
+        private string _fontDirectory;
 
         public string FileName { get; set; }
 
@@ -64,7 +64,7 @@ namespace FontRegister.UnitTests
                 Thread.Sleep(10);
             }
 
-            _userFontDirectory = FontConsts.GetLocalFontDirectory();
+            _fontDirectory = _scope == InstallationScope.User ? FontConsts.GetLocalFontDirectory() : FontConsts.GetMachineFontDirectory();
 
             // Create multiple test fonts
             for (int i = 0; i < 5; i++)
@@ -93,12 +93,13 @@ namespace FontRegister.UnitTests
             }
         }
 
+        //AI! this method needs to support scope
         private void CleanupTestFonts()
         {
             var regex = new Regex(TEST_FONT_PATTERN, RegexOptions.IgnoreCase);
 
             // Clean up font files from user font directory
-            foreach (var file in Directory.GetFiles(_userFontDirectory, "*.*"))
+            foreach (var file in Directory.GetFiles(_fontDirectory, "*.*"))
             {
                 if (regex.IsMatch(Path.GetFileNameWithoutExtension(file)))
                 {
@@ -327,14 +328,13 @@ namespace FontRegister.UnitTests
             {
                 return retryPolicy.Execute(() =>
                 {
-                    string fontDirectory = _scope == InstallationScope.Machine ? FontConsts.GetMachineFontDirectory() : _userFontDirectory;
                     RegistryKey registryKey = _scope == InstallationScope.Machine
                         ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey)
                         : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey);
 
                     // Check in font directory
                     if (FontConsts.SupportedExtensions.Any(ext =>
-                            File.Exists(Path.Combine(fontDirectory, fontName + ext))))
+                            File.Exists(Path.Combine(_fontDirectory, fontName + ext))))
                     {
                         // Check registry
                         using (registryKey)
