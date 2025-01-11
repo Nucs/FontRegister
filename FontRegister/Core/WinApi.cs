@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Security.Principal;
-using System.ServiceProcess;
+using System.Diagnostics;
 
 namespace FontRegister;
 /// <summary>
@@ -9,25 +9,44 @@ namespace FontRegister;
 internal static class WinApi
 {
     /// <summary>
-    /// Restarts the Windows Font Cache Service
+    /// Restarts the Windows Font Cache Service using command line
     /// </summary>
     /// <returns>True if service was successfully restarted, false otherwise</returns>
     public static bool RestartFontCacheService()
     {
         try
         {
-            using (var service = new ServiceController("FontCache"))
+            // Stop the service
+            var stopProcess = new Process
             {
-                if (service.Status == ServiceControllerStatus.Running)
+                StartInfo = new ProcessStartInfo
                 {
-                    service.Stop();
-                    service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
+                    FileName = "net",
+                    Arguments = "stop FontCache",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
                 }
-                
-                service.Start();
-                service.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(30));
-                return true;
-            }
+            };
+            stopProcess.Start();
+            stopProcess.WaitForExit(30000); // 30 second timeout
+
+            // Start the service
+            var startProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "net",
+                    Arguments = "start FontCache",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+            startProcess.Start();
+            startProcess.WaitForExit(30000); // 30 second timeout
+
+            return true;
         }
         catch
         {
