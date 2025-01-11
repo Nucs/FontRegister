@@ -90,7 +90,7 @@ public class WindowsMachineFontInstaller : IFontInstaller
                     throw new InvalidOperationException($"{fileName}: Unable to open the fonts registry key.");
                 }
 
-                fontsKey.SetValue(registryFontName, fontPath);
+                fontsKey.SetValue(registryFontName, destPath);
             }
 
             Console.WriteLine($"{fileName}: Font installed successfully.");
