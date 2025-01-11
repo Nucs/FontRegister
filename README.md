@@ -14,11 +14,14 @@ FontRegister is both a command-line tool and a csharp native library (pure code)
 ## Supported Font Types
 
 The following font file extensions are supported:
-- `.ttf` (TrueType Font)
-- `.otf` (OpenType Font)
-- `.fon` (Windows Font)
-- `.ttc` (TrueType Collection)
-- `.fnt` (Windows Font)
+```csharp
+// From FontConsts.SupportedExtensions
+".ttf"  // TrueType Font
+".otf"  // OpenType Font
+".fon"  // Windows Font
+".ttc"  // TrueType Collection
+".fnt"  // Windows Font
+```
 
 ## Usage
 
@@ -45,10 +48,15 @@ fontregister install --all-users "c:/folder" "c:/font.ttf"
 Here's the output of the help command:
 
 ```sh
-Usage: FontManager <command> [paths...]
+Usage: FontManager <command> [options] [paths...]
 Commands:
   install <path1> [path2] [path3] ... : Install fonts from specified files or directories
   uninstall <fontName1> [fontName2] [fontName3] ... : Uninstall specified fonts
+Options:
+  --user, -u        : Install for current user only (default)
+  --machine, -m     : Install for all users
+  --all-users       : Same as --machine
+Note: All font operations require administrator rights
 ```
 
 ## FontRegister Library Code Example
@@ -58,14 +66,20 @@ PM> Install-Package FontRegister
 ```
 
 ```csharp
-//single file
-var notifier = new WindowsFontInstaller(new WindowsSystemNotifier()); //pass null to not notify other apps
-notifier.InstallFont("C:/myfonts/myfont.ttf");
+//Note: All font operations require administrator rights
 
-//in bulk
-var fontManager = new FontManager(notifier);
-fontManager.InstallFonts(new string[] { "C:/myfonts", "C:/myfonts2/myfont.ttf" });
+//single file for current user
+var notifier = new WindowsSystemNotifier(); //pass null to not notify other apps
+var userInstaller = new WindowsUserFontInstaller(notifier);
+var fontManager = new FontManager(userInstaller);
+fontManager.InstallFonts(new[] { "C:/myfonts/myfont.ttf" });
+
+//in bulk for all users
+var machineInstaller = new WindowsMachineFontInstaller(notifier);
+var fontManager = new FontManager(machineInstaller);
+fontManager.InstallFonts(new[] { "C:/myfonts", "C:/myfonts2/myfont.ttf" });
 ```
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
