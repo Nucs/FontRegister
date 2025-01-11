@@ -51,12 +51,15 @@ namespace FontRegister.UnitTests
             if (!Path.HasExtension(normalizedName))
                 normalizedName += ".ttf";
 
+            var consoleOutput = new StringWriter();
+            Console.SetOut(consoleOutput);
+            
             // Act
             var result = _installer.UninstallFont(normalizedName);
 
             // Assert
             Assert.That(result, Is.False, "Should return false for non-existent font");
-            Assert.That(Console.Out.ToString(), Does.Contain("Font not found anywhere"), "Expected console output not found");
+            Assert.That(consoleOutput.ToString(), Does.Contain("Font not found anywhere"), "Expected console output not found");
         }
 
         [Test]
