@@ -12,15 +12,16 @@ using Polly;
 
 namespace FontRegister.UnitTests
 {
-    [TestFixture("Historic.otf")]
-    [TestFixture("Mang Kenapa.otf")]
-    [TestFixture("Mang Kenapa.ttf")]
-    [TestFixture("steelfis.fon")]
-    [TestFixture("meiryo.ttc")]
-    [TestFixture("Mang_Kenapa.fnt")]
-    [TestFixture("JetBrainsMono-Regular.otf")]
+    [TestFixture("Historic.otf", false)]
+    [TestFixture("Mang Kenapa.otf", false)]
+    [TestFixture("Mang Kenapa.ttf", false)]
+    [TestFixture("steelfis.fon", false)]
+    [TestFixture("meiryo.ttc", false)]
+    [TestFixture("Mang_Kenapa.fnt", false)]
+    [TestFixture("JetBrainsMono-Regular.otf", false)]
     public class IntegrationTests
     {
+        private readonly bool _machineWide;
         private const string TEST_FONT_PATTERN = @"TestFont_\w+";
         private Random _random = new Random();
         private string _tempFontDirectory;
@@ -28,8 +29,9 @@ namespace FontRegister.UnitTests
 
         public string FileName { get; set; }
 
-        public IntegrationTests(string fileName)
+        public IntegrationTests(string fileName, bool machineWide)
         {
+            _machineWide = machineWide;
             FileName = fileName;
         }
 
@@ -112,7 +114,7 @@ namespace FontRegister.UnitTests
         {
             try
             {
-                new WindowsFontInstaller().UninstallFont(filePath);
+                new WindowsUserFontInstaller().UninstallFont(filePath);
             }
             catch (Exception e)
             {
