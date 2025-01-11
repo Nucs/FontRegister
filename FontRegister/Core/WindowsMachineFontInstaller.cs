@@ -154,7 +154,7 @@ public class WindowsMachineFontInstaller : IFontInstaller
                 fontNameOrPath = Path.GetFullPath(fontNameOrPath).Replace("/", "\\"); //normalize
                 fontPath = fontNameOrPath;
                 if (!fontNameOrPath.StartsWith(fontDir, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException($"{fileName}: Cannot uninstall fonts outside the local font directory, path: {fontNameOrPath}, expected: {Path.Combine(fontDir, fontNameOrPath)}");
+                    throw new InvalidOperationException($"{fileName}: Cannot uninstall fonts outside the windows font directory, path: {fontNameOrPath}, expected: {Path.Combine(fontDir, fontNameOrPath)}");
             }
             else
             {

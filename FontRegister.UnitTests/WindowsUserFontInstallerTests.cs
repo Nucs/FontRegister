@@ -6,6 +6,7 @@ using NUnit.Framework.Legacy;
 namespace FontRegister.UnitTests
 {
     [TestFixture]
+    [NonParallelizable]
     public class WindowsUserFontInstallerTests
     {
         private WindowsUserFontInstaller _installer;
@@ -49,10 +50,6 @@ namespace FontRegister.UnitTests
             var normalizedName = Path.GetFileName(fontPath);
             if (!Path.HasExtension(normalizedName))
                 normalizedName += ".ttf";
-
-            // Arrange console capture
-            var consoleOutput = new StringWriter();
-            Console.SetOut(consoleOutput);
 
             // Arrange console capture
             var consoleOutput = new StringWriter();

@@ -6,6 +6,7 @@ using NUnit.Framework.Legacy;
 namespace FontRegister.UnitTests
 {
     [TestFixture]
+    [NonParallelizable]
     public class WindowsMachineFontInstallerTests
     {
         private WindowsMachineFontInstaller _installer;
