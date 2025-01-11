@@ -41,10 +41,6 @@
         <None Remove="FontRegister.csproj.DotSettings" />
     </ItemGroup>
     <ItemGroup>
-      <PackageReference Include="CommandLineParser" Version="2.9.1" />
-      <PackageReference Include="System.IO.Compression" Version="4.3.0" />
-    </ItemGroup>
-    <ItemGroup>
       <Content Include="Properties\icon.ico" Pack="true" PackagePath="" />
       <Content Include="Properties\icon.png" Pack="true" PackagePath="" />
     </ItemGroup>
