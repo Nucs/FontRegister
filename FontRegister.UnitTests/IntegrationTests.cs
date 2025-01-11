@@ -12,29 +12,34 @@ using Polly;
 
 namespace FontRegister.UnitTests
 {
-    //AI! use enum instead of true false
-    [TestFixture("Historic.otf", false)]
-    [TestFixture("Mang Kenapa.otf", false)]
-    [TestFixture("Mang Kenapa.ttf", false)]
-    [TestFixture("steelfis.fon", false)]
-    [TestFixture("meiryo.ttc", false)]
-    [TestFixture("Mang_Kenapa.fnt", false)]
-    [TestFixture("JetBrainsMono-Regular.otf", false)]
-    [TestFixture("Historic.otf", true)]
-    [TestFixture("Mang Kenapa.otf", true)]
-    [TestFixture("Mang Kenapa.ttf", true)]
-    [TestFixture("steelfis.fon", true)]
-    [TestFixture("meiryo.ttc", true)]
-    [TestFixture("Mang_Kenapa.fnt", true)]
-    [TestFixture("JetBrainsMono-Regular.otf", true)]
+    public enum InstallationScope
+    {
+        User,
+        Machine
+    }
+
+    [TestFixture("Historic.otf", InstallationScope.User)]
+    [TestFixture("Mang Kenapa.otf", InstallationScope.User)]
+    [TestFixture("Mang Kenapa.ttf", InstallationScope.User)]
+    [TestFixture("steelfis.fon", InstallationScope.User)]
+    [TestFixture("meiryo.ttc", InstallationScope.User)]
+    [TestFixture("Mang_Kenapa.fnt", InstallationScope.User)]
+    [TestFixture("JetBrainsMono-Regular.otf", InstallationScope.User)]
+    [TestFixture("Historic.otf", InstallationScope.Machine)]
+    [TestFixture("Mang Kenapa.otf", InstallationScope.Machine)]
+    [TestFixture("Mang Kenapa.ttf", InstallationScope.Machine)]
+    [TestFixture("steelfis.fon", InstallationScope.Machine)]
+    [TestFixture("meiryo.ttc", InstallationScope.Machine)]
+    [TestFixture("Mang_Kenapa.fnt", InstallationScope.Machine)]
+    [TestFixture("JetBrainsMono-Regular.otf", InstallationScope.Machine)]
     public class IntegrationTests
     {
-        private readonly bool _machineWide;
+        private readonly InstallationScope _scope;
         private const string TEST_FONT_PATTERN = @"TestFont_\w+";
 
         private string[] GetScopeArgs()
         {
-            return _machineWide ? new[] { "--machine" } : new[] { "--user" };
+            return _scope == InstallationScope.Machine ? new[] { "--machine" } : new[] { "--user" };
         }
         private Random _random = new Random();
         private string _tempFontDirectory;
@@ -42,9 +47,9 @@ namespace FontRegister.UnitTests
 
         public string FileName { get; set; }
 
-        public IntegrationTests(string fileName, bool machineWide)
+        public IntegrationTests(string fileName, InstallationScope scope)
         {
-            _machineWide = machineWide;
+            _scope = scope;
             FileName = fileName;
         }
 
@@ -320,8 +325,8 @@ namespace FontRegister.UnitTests
             {
                 return retryPolicy.Execute(() =>
                 {
-                    string fontDirectory = _machineWide ? FontConsts.GetMachineFontDirectory() : _userFontDirectory;
-                    RegistryKey registryKey = _machineWide 
+                    string fontDirectory = _scope == InstallationScope.Machine ? FontConsts.GetMachineFontDirectory() : _userFontDirectory;
+                    RegistryKey registryKey = _scope == InstallationScope.Machine 
                         ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey)
                         : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey);
 
@@ -348,7 +353,7 @@ namespace FontRegister.UnitTests
                 Console.WriteLine("Looking for font: " + fontName);
                 if (!checkingIfUninstalled)
                 {
-                    using var registryKey = _machineWide 
+                    using var registryKey = _scope == InstallationScope.Machine 
                         ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey)
                         : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey);
                     
