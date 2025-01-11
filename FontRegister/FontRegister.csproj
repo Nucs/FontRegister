@@ -7,8 +7,8 @@
         <TargetFrameworks>net48;net6.0-windows;net8.0-windows</TargetFrameworks>
         <AssemblyTitle>FontRegister</AssemblyTitle>
         <AssemblyProduct>FontRegister</AssemblyProduct>
-        <AssemblyCopyright>Copyright © Eli Belash / Nucs 2017</AssemblyCopyright>
-        <AssemblyVersion>2.1.0.0</AssemblyVersion>
+        <AssemblyCopyright>Copyright © Eli Belash / Nucs 2025</AssemblyCopyright>
+        <AssemblyVersion>2.1.0</AssemblyVersion>
         <LangVersion>10</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Version>2.1.0</Version>
