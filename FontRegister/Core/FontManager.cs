@@ -2,6 +2,8 @@
 
 namespace FontRegister;
 
+//TODO: support exit code
+
 public class FontManager
 {
     private readonly IFontInstaller _fontInstaller;

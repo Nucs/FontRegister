@@ -15,9 +15,10 @@ public class Program
             }
 
             ISystemNotifier systemNotifier = new WindowsSystemNotifier();
-            IFontInstaller fontInstaller = new WindowsFontInstaller(systemNotifier);
+            IFontInstaller fontUserInstaller = new WindowsUserFontInstaller(systemNotifier);
+            IFontInstaller fontMachineInstaller = new WindowsMachineFontInstaller(systemNotifier);
 
-            FontManager fontManager = new FontManager(fontInstaller);
+            FontManager fontManager = new FontManager(fontUserInstaller, fontMachineInstaller);
 
             if (args.Length < 1)
             {
