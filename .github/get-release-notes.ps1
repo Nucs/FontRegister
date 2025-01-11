@@ -1,3 +1,4 @@
+# Example: .\get-release-notes.ps1 "refs/tags/v2.1.0.10-beta"  "refs/tags/v2.1.0.0"
 param (
     [Parameter(Mandatory=$true)]
     [string]$CurrentTag,

@@ -203,6 +203,9 @@ public class WindowsUserFontInstaller : IFontInstaller
                             fileName = potentialFileName;
                         }
                     }
+
+                    if (fontPath == null)
+                        throw new InvalidOperationException($"{fileName}: Font file not found in the system.");
                 }
                 else
                 {
