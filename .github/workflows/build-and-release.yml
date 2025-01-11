@@ -146,16 +146,23 @@ jobs:
             -p:Version=${{ steps.get_version.outputs.VERSION }}
         fi
 
+    - name: Set Framework Name
+      id: framework
+      run: |
+        OUTPUT_FRAMEWORK="${{ matrix.framework }}"
+        OUTPUT_FRAMEWORK=$(echo $OUTPUT_FRAMEWORK | sed 's/-windows//')
+        echo "name=$OUTPUT_FRAMEWORK" >> $GITHUB_OUTPUT
+
     - name: Create ZIP Archive
       run: |
         cd publish/${{ matrix.framework }}/${{ matrix.runtime }} && \
-        zip -r ../../../FontRegister-${{ matrix.framework }}-${{ matrix.runtime }}.zip ./*
+        zip -r ../../../FontRegister-${{ steps.framework.outputs.name }}-${{ matrix.runtime }}.zip ./*
       
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: FontRegister-${{ matrix.framework }}-${{ matrix.runtime }}
-        path: FontRegister-${{ matrix.framework }}-${{ matrix.runtime }}.zip
+        name: FontRegister-${{ steps.framework.outputs.name }}-${{ matrix.runtime }}
+        path: FontRegister-${{ steps.framework.outputs.name }}-${{ matrix.runtime }}.zip
         retention-days: 5
 
   create-release:
