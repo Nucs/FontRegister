@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace FontRegister.UnitTests
 {
@@ -69,7 +70,7 @@ namespace FontRegister.UnitTests
 
             // Act & Assert
             var ex = Assert.Throws<InvalidOperationException>(() => _installer.UninstallFont(fontName));
-            StringAssert.Contains("Multiple font files found", ex.Message);
+            Assert.That(ex.Message, Does.Contain("Multiple font files found"));
         }
 
         [Test]
