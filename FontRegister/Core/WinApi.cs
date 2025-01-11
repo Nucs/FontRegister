@@ -2,7 +2,7 @@
 using System.Security.Principal;
 
 namespace FontRegister;
-
+//AI! Add Api to restart FontCache service
 /// <summary>
 /// Provides access to Windows API functions for font management and system notifications.
 /// </summary>
