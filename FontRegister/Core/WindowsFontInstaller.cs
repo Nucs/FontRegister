@@ -51,6 +51,7 @@ public class WindowsFontInstaller : IFontInstaller
                 ".otf" => $"{fontName} (OpenType)",
                 ".ttc" => $"{fontName} (TrueType)",
                 ".fon" => $"{fontName} (VGA res)",
+                ".fnt" => fontName,
                 _ => fontName
             };
 

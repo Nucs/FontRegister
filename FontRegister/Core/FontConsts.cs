@@ -5,7 +5,7 @@ public static class FontConsts
     /// <summary>
     /// The supported fonts as per https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-addfontresourcew
     /// </summary>
-    public static readonly string[] SupportedExtensions = { ".ttf", ".otf", ".fon", ".ttc" };
+    public static readonly string[] SupportedExtensions = { ".ttf", ".otf", ".fon", ".ttc", ".fnt" };
 
     public static string GetLocalFontDirectory()
     {

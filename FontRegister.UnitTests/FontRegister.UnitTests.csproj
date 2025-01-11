@@ -29,11 +29,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="Resources\Historic.otf" />
-      <EmbeddedResource Include="Resources\Mang Kenapa.otf" />
-      <EmbeddedResource Include="Resources\Mang Kenapa.ttf" />
-      <EmbeddedResource Include="Resources\steelfis.fon" />
-      <EmbeddedResource Include="Resources\meiryo.ttc" />
+      <EmbeddedResource Include="Resources\*" />
     </ItemGroup>
 
 </Project>

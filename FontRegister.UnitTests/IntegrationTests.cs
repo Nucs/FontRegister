@@ -17,6 +17,8 @@ namespace FontRegister.UnitTests
     [TestFixture("Mang Kenapa.ttf")]
     [TestFixture("steelfis.fon")]
     [TestFixture("meiryo.ttc")]
+    [TestFixture("Mang_Kenapa.fnt")]
+    [TestFixture("JetBrainsMono-Regular.otf")]
     public class IntegrationTests
     {
         private const string TEST_FONT_PATTERN = @"TestFont_\w+";
@@ -36,7 +38,7 @@ namespace FontRegister.UnitTests
         {
             _tempFontDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_tempFontDirectory);
-            while(!Directory.Exists(_tempFontDirectory))
+            while (!Directory.Exists(_tempFontDirectory))
             {
                 Thread.Sleep(10);
             }
@@ -105,7 +107,7 @@ namespace FontRegister.UnitTests
                 }
             }
         }
-        
+
         private void TryDeleteFile(string filePath)
         {
             try
@@ -300,8 +302,8 @@ namespace FontRegister.UnitTests
                 return retryPolicy.Execute(() =>
                 {
                     // Check in user font directory
-                    if (FontConsts.SupportedExtensions.Any(ext => 
-                        File.Exists(Path.Combine(_userFontDirectory, fontName + ext))))
+                    if (FontConsts.SupportedExtensions.Any(ext =>
+                            File.Exists(Path.Combine(_userFontDirectory, fontName + ext))))
                     {
                         // Check registry
                         using (var fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts"))
