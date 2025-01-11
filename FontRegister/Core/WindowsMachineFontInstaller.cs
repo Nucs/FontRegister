@@ -27,6 +27,16 @@ public class WindowsMachineFontInstaller : IFontInstaller
         _systemNotifier = systemNotifier;
     }
 
+    /// <summary>
+    /// Installs a font file system-wide for all users.
+    /// </summary>
+    /// <param name="fontPath">The full path to the font file to install.</param>
+    /// <returns>True if the font was successfully installed, false otherwise.</returns>
+    /// <remarks>
+    /// The font file will be copied to the Windows Fonts directory and registered in the system registry.
+    /// Requires administrator privileges to install fonts system-wide.
+    /// Supported font types are: .ttf, .otf, .fon, .ttc, and .fnt files.
+    /// </remarks>
     public bool InstallFont(string fontPath)
     {
         string? fileName = null;
@@ -116,6 +126,16 @@ public class WindowsMachineFontInstaller : IFontInstaller
         }
     }
 
+    /// <summary>
+    /// Uninstalls a font from the system-wide font collection.
+    /// </summary>
+    /// <param name="fontNameOrPath">The name of the font or the full path to the font file to uninstall.</param>
+    /// <returns>True if the font was successfully uninstalled, false otherwise.</returns>
+    /// <remarks>
+    /// The method can accept either a font name (with or without extension) or a full path to the font file.
+    /// It will remove the font from the system, delete the font file from Windows Fonts directory, 
+    /// and clean up system registry entries. Requires administrator privileges.
+    /// </remarks>
     public bool UninstallFont(string fontNameOrPath)
     {
         string? fileName = null; //the file name with extension
