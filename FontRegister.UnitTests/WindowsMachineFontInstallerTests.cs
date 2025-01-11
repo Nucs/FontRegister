@@ -59,28 +59,47 @@ namespace FontRegister.UnitTests
         [Test]
         public void UninstallFont_WithMultipleExtensions_ThrowsException()
         {
-            // Arrange
-            var fontDir = FontConsts.GetMachineFontDirectory();
-            var fontName = "TestFont";
-            var ttfPath = Path.Combine(fontDir, $"{fontName}.ttf");
-            var otfPath = Path.Combine(fontDir, $"{fontName}.otf");
+            try
+            {
+                // Arrange
+                var fontDir = FontConsts.GetMachineFontDirectory();
+                var fontName = "TestFont";
+                var ttfPath = Path.Combine(fontDir, $"{fontName}.ttf");
+                var otfPath = Path.Combine(fontDir, $"{fontName}.otf");
 
-            File.WriteAllText(ttfPath, "dummy content");
-            File.WriteAllText(otfPath, "dummy content");
+                File.WriteAllText(ttfPath, "dummy content");
+                File.WriteAllText(otfPath, "dummy content");
 
-            // Act & Assert
-            var ex = Assert.Throws<InvalidOperationException>(() => _installer.UninstallFont(fontName));
-            Assert.That(ex.Message, Does.Contain("Multiple font files found"));
+                // Act
+                _installer.UninstallFont(fontName);
+
+                // Assert
+                Assert.Fail("Expected InvalidOperationException was not thrown");
+            }
+            catch (InvalidOperationException ex)
+            {
+                Assert.That(ex.Message, Does.Contain("Multiple font files found"));
+            }
+            finally
+            {
+                // Cleanup
+                try
+                {
+                    File.Delete(Path.Combine(FontConsts.GetMachineFontDirectory(), "TestFont.ttf"));
+                    File.Delete(Path.Combine(FontConsts.GetMachineFontDirectory(), "TestFont.otf"));
+                }
+                catch { }
+            }
         }
 
         [Test]
         public void InstallFont_WithInvalidPath_ReturnsFalse()
         {
             // Arrange
-            var invalidName = "NonExistentFont";
+            var invalidPath = Path.Combine(_tempFontDirectory, "NonExistentFont.ttf");
 
             // Act
-            var result = _installer.UninstallFont(invalidName);
+            var result = _installer.InstallFont(invalidPath);
 
             // Assert
             Assert.That(result, Is.False);
