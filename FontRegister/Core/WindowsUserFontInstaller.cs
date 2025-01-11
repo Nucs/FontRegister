@@ -3,14 +3,24 @@ using Microsoft.Win32;
 using FontRegister.Abstraction;
 
 namespace FontRegister;
+/// <summary>
+/// Implements font installation operations for the current user's context.
+/// </summary>
 public class WindowsUserFontInstaller : IFontInstaller
 {
     private readonly ISystemNotifier? _systemNotifier;
 
+    /// <summary>
+    /// Initializes a new instance of the WindowsUserFontInstaller class.
+    /// </summary>
     public WindowsUserFontInstaller()
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the WindowsUserFontInstaller class with a system notifier.
+    /// </summary>
+    /// <param name="systemNotifier">The system notifier to use for font change notifications.</param>
     public WindowsUserFontInstaller(ISystemNotifier systemNotifier)
     {
         _systemNotifier = systemNotifier;

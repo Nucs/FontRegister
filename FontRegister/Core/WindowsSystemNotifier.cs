@@ -3,8 +3,15 @@ using static FontRegister.WinApi;
 
 namespace FontRegister;
 
+/// <summary>
+/// Implements system notification for font changes on Windows.
+/// </summary>
 public class WindowsSystemNotifier : ISystemNotifier
 {
+    /// <summary>
+    /// Notifies the Windows system and running applications about font changes.
+    /// Broadcasts WM_FONTCHANGE message and updates shell.
+    /// </summary>
     public void NotifyFontChange()
     {
         // Broadcast WM_FONTCHANGE message
