@@ -123,7 +123,10 @@ jobs:
       shell: bash
       run: |
         VERSION=${GITHUB_REF#refs/tags/v}
+        # Remove everything after hyphen for AssemblyVersion
+        ASSEMBLY_VERSION=${VERSION%%-*}
         echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "ASSEMBLY_VERSION=$ASSEMBLY_VERSION" >> $GITHUB_OUTPUT
           
     - name: Publish
       run: |
@@ -135,7 +138,7 @@ jobs:
             --self-contained true \
             --output publish/${{ matrix.framework }}/${{ matrix.runtime }} \
             -p:Version=${{ steps.get_version.outputs.VERSION }} \
-            -p:AssemblyVersion=${{ steps.get_version.outputs.VERSION }}
+            -p:AssemblyVersion=${{ steps.get_version.outputs.ASSEMBLY_VERSION }}
         else
           dotnet publish FontRegister/FontRegister.csproj \
             --configuration Release \
@@ -145,7 +148,7 @@ jobs:
             -p:PublishSingleFile=true \
             --output publish/${{ matrix.framework }}/${{ matrix.runtime }} \
             -p:Version=${{ steps.get_version.outputs.VERSION }} \
-            -p:AssemblyVersion=${{ steps.get_version.outputs.VERSION }}
+            -p:AssemblyVersion=${{ steps.get_version.outputs.ASSEMBLY_VERSION }}
         fi
 
     - name: Set Framework Name
@@ -247,16 +250,16 @@ jobs:
       if: steps.check_prerelease.outputs.IS_PRERELEASE != 'True'
       run: |
         $outputPath = Join-Path $env:GITHUB_WORKSPACE "artifacts/nuget"
-        dotnet build $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release -p:Version=${{ steps.get_version.outputs.VERSION }} -p:AssemblyVersion=${{ steps.get_version.outputs.VERSION }}
-        dotnet pack $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release --output $outputPath --no-build -p:Version=${{ steps.get_version.outputs.VERSION }} -p:AssemblyVersion=${{ steps.get_version.outputs.VERSION }}
+        dotnet build $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release -p:Version=${{ steps.get_version.outputs.VERSION }} -p:AssemblyVersion=${{ steps.get_version.outputs.ASSEMBLY_VERSION }}
+        dotnet pack $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release --output $outputPath --no-build -p:Version=${{ steps.get_version.outputs.VERSION }} -p:AssemblyVersion=${{ steps.get_version.outputs.ASSEMBLY_VERSION }}
         dir $outputPath
 
     - name: Build & Pack (Prerelease)
       if: steps.check_prerelease.outputs.IS_PRERELEASE == 'True'
       run: |
         $outputPath = Join-Path $env:GITHUB_WORKSPACE "artifacts/nuget"
-        dotnet build $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release -p:Version=${{ steps.get_version.outputs.VERSION }} -p:AssemblyVersion=${{ steps.get_version.outputs.VERSION }}
-        dotnet pack $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release --output $outputPath --no-build -p:Version=${{ steps.get_version.outputs.VERSION }} -p:AssemblyVersion=${{ steps.get_version.outputs.VERSION }}
+        dotnet build $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release -p:Version=${{ steps.get_version.outputs.VERSION }} -p:AssemblyVersion=${{ steps.get_version.outputs.ASSEMBLY_VERSION }}
+        dotnet pack $env:GITHUB_WORKSPACE/FontRegister/FontRegister.csproj --configuration Release --output $outputPath --no-build -p:Version=${{ steps.get_version.outputs.VERSION }} -p:AssemblyVersion=${{ steps.get_version.outputs.ASSEMBLY_VERSION }}
         dir $outputPath
 
     - name: Push to NuGet
