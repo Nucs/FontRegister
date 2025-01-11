@@ -32,6 +32,7 @@ public class Program
 
             // Default to user scope
             bool? useMachineWide = null;
+            bool restartFontCache = false;
             var remainingArgs = new List<string>();
 
             // Parse scope flags and collect remaining arguments
@@ -63,6 +64,10 @@ public class Program
 
                         useMachineWide = false;
                         break;
+                    case "--restart-font-cache":
+                    case "--clear-cache":
+                        restartFontCache = true;
+                        break;
                     default:
                         remainingArgs.Add(args[i]);
                         break;
@@ -90,6 +95,10 @@ public class Program
                     }
 
                     fontManager.InstallFonts(remainingArgs.ToArray());
+                    if (restartFontCache)
+                    {
+                        WinApi.RestartFontCacheService();
+                    }
                     break;
                 case "uninstall":
                     if (!remainingArgs.Any())
@@ -100,6 +109,10 @@ public class Program
                     }
 
                     fontManager.UninstallFonts(remainingArgs.ToArray());
+                    if (restartFontCache)
+                    {
+                        WinApi.RestartFontCacheService();
+                    }
                     break;
                 default:
                     Console.WriteLine("Invalid command. Use install or uninstall.");
@@ -129,5 +142,7 @@ public class Program
         Console.WriteLine("  --user, -u        : Install for current user only (default)");
         Console.WriteLine("  --machine, -m     : Install for all users (requires admin rights)");
         Console.WriteLine("  --all-users       : Same as --machine");
+        Console.WriteLine("  --restart-font-cache, --clear-cache");
+        Console.WriteLine("                    : Restart the Windows Font Cache service after operation");
     }
 }
