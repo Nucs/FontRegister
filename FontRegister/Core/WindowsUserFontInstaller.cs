@@ -34,6 +34,19 @@ public class WindowsUserFontInstaller : IFontInstaller
     /// <remarks>
     /// The font file will be copied to the user's local font directory and registered in the current user's registry.
     /// Supported font types are: .ttf, .otf, .fon, .ttc, and .fnt files.
+    /// 
+    /// The installation process:
+    /// 1. Normalizes and validates the font path
+    /// 2. Checks if the font is already installed
+    /// 3. Copies the font file to the user's font directory
+    /// 4. Registers the font with Windows using AddFontResource
+    /// 5. Adds the font entry to the user's registry
+    /// 6. Notifies the system of font changes
+    /// 
+    /// Throws InvalidOperationException if:
+    /// - Font file cannot be copied after multiple attempts
+    /// - Font resource cannot be added
+    /// - Registry operations fail
     /// </remarks>
     public bool InstallFont(string fontPath)
     {
@@ -132,6 +145,24 @@ public class WindowsUserFontInstaller : IFontInstaller
     /// <remarks>
     /// The method can accept either a font name (with or without extension) or a full path to the font file.
     /// It will remove the font from the system, delete the font file, and clean up registry entries.
+    /// 
+    /// The uninstallation process:
+    /// 1. Resolves the font file path from the provided name or path
+    /// 2. Removes the font resource using RemoveFontResource
+    /// 3. Deletes the font file from the user's font directory
+    /// 4. Removes the font entry from the user's registry
+    /// 5. Notifies the system of font changes
+    /// 
+    /// Special cases:
+    /// - If a font name is provided without extension, searches for all supported extensions
+    /// - If multiple fonts with the same name but different extensions exist, requires explicit extension
+    /// - Cannot uninstall fonts outside the user's font directory
+    /// 
+    /// Throws InvalidOperationException if:
+    /// - Multiple font files found with same name but different extensions
+    /// - Font file is outside the user's font directory
+    /// - Unsupported font extension
+    /// - Registry operations fail
     /// </remarks>
     public bool UninstallFont(string fontNameOrPath)
     {
