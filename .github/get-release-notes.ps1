@@ -1,17 +1,21 @@
-#AI! add $PreviousTag optional parameter
-
 param (
     [Parameter(Mandatory=$true)]
-    [string]$CurrentTag
+    [string]$CurrentTag,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$PreviousTag
 )
 
-# Get the previous release tag
-$previousTag = git describe --tags --abbrev=0 "$CurrentTag^" 2>$null
-if ($LASTEXITCODE -ne 0) {
-    # If no previous tag exists, get all commits
+# Use provided previous tag or get the previous release tag
+if (-not $PreviousTag) {
+    $PreviousTag = git describe --tags --abbrev=0 "$CurrentTag^" 2>$null
+}
+
+if (-not $PreviousTag -or $LASTEXITCODE -ne 0) {
+    # If no previous tag exists or provided, get all commits
     $range = $CurrentTag
 } else {
-    $range = "$previousTag..$CurrentTag"
+    $range = "$PreviousTag..$CurrentTag"
 }
 
 # Get commit messages between tags
