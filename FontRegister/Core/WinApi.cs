@@ -1,13 +1,39 @@
 ﻿using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.ServiceProcess;
 
 namespace FontRegister;
-//AI! Add Api to restart FontCache service
 /// <summary>
 /// Provides access to Windows API functions for font management and system notifications.
 /// </summary>
 internal static class WinApi
 {
+    /// <summary>
+    /// Restarts the Windows Font Cache Service
+    /// </summary>
+    /// <returns>True if service was successfully restarted, false otherwise</returns>
+    public static bool RestartFontCacheService()
+    {
+        try
+        {
+            using (var service = new ServiceController("FontCache"))
+            {
+                if (service.Status == ServiceControllerStatus.Running)
+                {
+                    service.Stop();
+                    service.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
+                }
+                
+                service.Start();
+                service.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(30));
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
     [DllImport("gdi32.dll", CharSet = CharSet.Unicode, EntryPoint = "AddFontResourceW")]
     public static extern int AddFontResource(string lpszFilename);
 
