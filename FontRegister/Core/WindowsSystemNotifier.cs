@@ -21,6 +21,10 @@ public class WindowsSystemNotifier : ISystemNotifier
         NotifyShell();
     }
 
+    /// <summary>
+    /// Broadcasts a WM_FONTCHANGE message to all top-level windows.
+    /// This notifies applications that they need to reload their font cache.
+    /// </summary>
     private void BroadcastFontChangeMessage()
     {
         SendMessageTimeout(
@@ -33,6 +37,10 @@ public class WindowsSystemNotifier : ISystemNotifier
             out _);
     }
 
+    /// <summary>
+    /// Notifies the Windows Shell of system-wide font changes.
+    /// This ensures Explorer and other shell components refresh their font lists.
+    /// </summary>
     private void NotifyShell()
     {
         const int SHCNE_ASSOCCHANGED = 0x08000000;
