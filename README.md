@@ -13,10 +13,12 @@ FontRegister is both a command-line tool and a csharp native library (pure code)
 
 ## Supported Font Types
 
-- `ttf`
-- `otf`
-- `fon`
-- `ttc`
+The following font file extensions are supported:
+- `.ttf` (TrueType Font)
+- `.otf` (OpenType Font)
+- `.fon` (Windows Font)
+- `.ttc` (TrueType Collection)
+- `.fnt` (Windows Font)
 
 ## Usage
 
@@ -24,9 +26,18 @@ FontRegister is both a command-line tool and a csharp native library (pure code)
 # Will print help
 fontregister
 
-# Register fonts in the following folders or specific files:
+# Register fonts for current user from the following folders or specific files (requires admin rights):
 # Note: Folders are deep-searched recursively.
 fontregister install "c:/folder" "c:/font.ttf" "./relativedir/" "./relativedir/font.otf"
+# or explicitly
+fontregister install --user "c:/folder" "c:/font.ttf"
+
+# Register fonts for all users (requires admin rights):
+fontregister install --machine "c:/folder" "c:/font.ttf"
+# or
+fontregister install -m "c:/folder" "c:/font.ttf"
+# or
+fontregister install --all-users "c:/folder" "c:/font.ttf"
 ```
 
 ## Help
