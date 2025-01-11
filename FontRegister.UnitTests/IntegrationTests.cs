@@ -98,7 +98,7 @@ namespace FontRegister.UnitTests
         {
             var regex = new Regex(TEST_FONT_PATTERN, RegexOptions.IgnoreCase);
 
-            // Clean up font files from user font directory
+            // Clean up font files from font directory based on scope
             foreach (var file in Directory.GetFiles(_fontDirectory, "*.*"))
             {
                 if (regex.IsMatch(Path.GetFileNameWithoutExtension(file)))
@@ -107,8 +107,10 @@ namespace FontRegister.UnitTests
                 }
             }
 
-            // Clean up from registry
-            using (var fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", true))
+            // Clean up from registry based on scope
+            using (var fontsKey = _scope == InstallationScope.Machine 
+                ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey, true)
+                : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey, true))
             {
                 if (fontsKey != null)
                 {
