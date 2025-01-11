@@ -15,7 +15,6 @@ FontRegister is both a command-line tool and a csharp native library (pure code)
 
 The following font file extensions are supported:
 ```csharp
-// From FontConsts.SupportedExtensions
 ".ttf"  // TrueType Font
 ".otf"  // OpenType Font
 ".fon"  // Windows Font

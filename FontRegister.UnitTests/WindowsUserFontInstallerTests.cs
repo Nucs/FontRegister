@@ -5,9 +5,9 @@ using NUnit.Framework;
 namespace FontRegister.UnitTests
 {
     [TestFixture]
-    public class WindowsFontInstallerTests
+    public class WindowsUserFontInstallerTests
     {
-        private WindowsFontInstaller _installer;
+        private WindowsUserFontInstaller _installer;
         private string _tempFontDirectory;
 
         [SetUp]
@@ -15,7 +15,7 @@ namespace FontRegister.UnitTests
         {
             _tempFontDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_tempFontDirectory);
-            _installer = new WindowsFontInstaller(new WindowsSystemNotifier());
+            _installer = new WindowsUserFontInstaller(new WindowsSystemNotifier());
         }
 
         [TearDown]
@@ -121,7 +121,7 @@ namespace FontRegister.UnitTests
         public void UninstallFont_WithNullSystemNotifier_DoesNotThrow()
         {
             // Arrange
-            var installer = new WindowsFontInstaller();
+            var installer = new WindowsUserFontInstaller();
             var fontPath = Path.Combine(_tempFontDirectory, "test.ttf");
 
             // Act & Assert

@@ -9,7 +9,7 @@ public class Program
     {
         try
         {
-            if (!CheckAdministratorAccess())
+            if (!WinApi.CheckAdministratorAccess())
             {
                 throw new UnauthorizedAccessException("This tool requires administrator privileges to manage fonts.");
             }
@@ -21,9 +21,9 @@ public class Program
             }
 
             string command = args[0].ToLower().TrimStart('-').TrimStart();
-            
+
             // Default to user scope
-            bool useMachineWide = false;
+            bool? useMachineWide = null;
             var remainingArgs = new List<string>();
 
             // Parse scope flags and collect remaining arguments
@@ -35,10 +35,24 @@ public class Program
                     case "--machine":
                     case "-m":
                     case "--all-users":
+                        if (useMachineWide.HasValue)
+                        {
+                            Console.WriteLine("Please specify only one of --user or --machine.");
+                            PrintUsage();
+                            return 1;
+                        }
+
                         useMachineWide = true;
                         break;
                     case "--user":
                     case "-u":
+                        if (useMachineWide.HasValue)
+                        {
+                            Console.WriteLine("Please specify only one of --user or --machine.");
+                            PrintUsage();
+                            return 1;
+                        }
+
                         useMachineWide = false;
                         break;
                     default:
@@ -47,9 +61,11 @@ public class Program
                 }
             }
 
+            useMachineWide ??= false;
+
             // Create the appropriate installer based on scope
             ISystemNotifier systemNotifier = new WindowsSystemNotifier();
-            IFontInstaller installer = useMachineWide 
+            IFontInstaller installer = useMachineWide.Value
                 ? new WindowsMachineFontInstaller(systemNotifier)
                 : new WindowsUserFontInstaller(systemNotifier);
 
@@ -64,6 +80,7 @@ public class Program
                         PrintUsage();
                         return 1;
                     }
+
                     fontManager.InstallFonts(remainingArgs.ToArray());
                     break;
                 case "uninstall":
@@ -73,6 +90,7 @@ public class Program
                         PrintUsage();
                         return 1;
                     }
+
                     fontManager.UninstallFonts(remainingArgs.ToArray());
                     break;
                 default:
@@ -89,17 +107,8 @@ public class Program
         {
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
-        
-        return 0;
-    }
 
-    static bool CheckAdministratorAccess()
-    {
-        using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
-        {
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
-            return principal.IsInRole(WindowsBuiltInRole.Administrator);
-        }
+        return 0;
     }
 
     static void PrintUsage()

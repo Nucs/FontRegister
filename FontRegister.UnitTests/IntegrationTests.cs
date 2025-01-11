@@ -37,10 +37,6 @@ namespace FontRegister.UnitTests
         private readonly InstallationScope _scope;
         private const string TEST_FONT_PATTERN = @"TestFont_\w+";
 
-        private string[] GetScopeArgs()
-        {
-            return _scope == InstallationScope.Machine ? new[] { "--machine" } : new[] { "--user" };
-        }
         private Random _random = new Random();
         private string _tempFontDirectory;
         private string _userFontDirectory;
@@ -51,6 +47,11 @@ namespace FontRegister.UnitTests
         {
             _scope = scope;
             FileName = fileName;
+        }
+
+        private string[] GetScopeArgs()
+        {
+            return _scope == InstallationScope.Machine ? new[] { "--machine" } : new[] { "--user" };
         }
 
         [SetUp]
@@ -309,7 +310,8 @@ namespace FontRegister.UnitTests
         {
             var retries = checkingIfUninstalled
                 ? new[] { TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(200) }
-                : new[] { 
+                : new[]
+                {
                     TimeSpan.FromMilliseconds(100),
                     TimeSpan.FromMilliseconds(200),
                     TimeSpan.FromMilliseconds(400),
@@ -326,7 +328,7 @@ namespace FontRegister.UnitTests
                 return retryPolicy.Execute(() =>
                 {
                     string fontDirectory = _scope == InstallationScope.Machine ? FontConsts.GetMachineFontDirectory() : _userFontDirectory;
-                    RegistryKey registryKey = _scope == InstallationScope.Machine 
+                    RegistryKey registryKey = _scope == InstallationScope.Machine
                         ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey)
                         : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey);
 
@@ -353,10 +355,10 @@ namespace FontRegister.UnitTests
                 Console.WriteLine("Looking for font: " + fontName);
                 if (!checkingIfUninstalled)
                 {
-                    using var registryKey = _scope == InstallationScope.Machine 
+                    using var registryKey = _scope == InstallationScope.Machine
                         ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey)
                         : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey);
-                    
+
                     if (registryKey != null)
                     {
                         Console.WriteLine("Installed fonts:");

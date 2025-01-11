@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Security.Principal;
 
 namespace FontRegister;
 
@@ -27,4 +28,14 @@ internal static class WinApi
 
     [DllImport("shell32.dll")]
     public static extern int SHChangeNotify(int eventId, uint flags, IntPtr item1, IntPtr item2);
+    
+    
+    public static bool CheckAdministratorAccess()
+    {
+        using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+        {
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+    }
 }

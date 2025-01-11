@@ -1,16 +1,24 @@
 using System;
 using System.IO;
+using FontRegister.Abstraction;
 using NUnit.Framework;
 
 namespace FontRegister.UnitTests
 {
-    [TestFixture]
+    [TestFixture(true)]
+    [TestFixture(false)]
     public class FontManagerTests
     {
+        private readonly bool _machineWide;
         private string _tempFontDirectory;
-        private WindowsFontInstaller _fontInstaller;
+        private IFontInstaller _fontInstaller;
         private WindowsSystemNotifier _systemNotifier;
         private FontManager _fontManager;
+
+        public FontManagerTests(bool machineWide)
+        {
+            _machineWide = machineWide;
+        }
 
         [SetUp]
         public void Setup()
@@ -19,7 +27,7 @@ namespace FontRegister.UnitTests
             Directory.CreateDirectory(_tempFontDirectory);
             
             _systemNotifier = new WindowsSystemNotifier();
-            _fontInstaller = new WindowsFontInstaller(_systemNotifier);
+            _fontInstaller = _machineWide ? new WindowsMachineFontInstaller(_systemNotifier) : new WindowsUserFontInstaller(_systemNotifier);
             _fontManager = new FontManager(_fontInstaller);
         }
 

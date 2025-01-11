@@ -3,15 +3,15 @@ using Microsoft.Win32;
 using FontRegister.Abstraction;
 
 namespace FontRegister;
-public class WindowsFontInstaller : IFontInstaller
+public class WindowsMachineFontInstaller : IFontInstaller
 {
     private readonly ISystemNotifier? _systemNotifier;
 
-    public WindowsFontInstaller()
+    public WindowsMachineFontInstaller()
     {
     }
 
-    public WindowsFontInstaller(ISystemNotifier systemNotifier)
+    public WindowsMachineFontInstaller(ISystemNotifier systemNotifier)
     {
         _systemNotifier = systemNotifier;
     }
@@ -35,7 +35,7 @@ public class WindowsFontInstaller : IFontInstaller
             var fontName = Path.GetFileNameWithoutExtension(fontPath);
             fontName = char.ToUpper(fontName[0]) + fontName.Substring(1); //first letter capital
 
-            var localFontDir = FontConsts.GetLocalFontDirectory();
+            var localFontDir = FontConsts.GetMachineFontDirectory();
 
             //check if font already installed, our normalized version vs given version
             if (File.Exists(Path.Combine(localFontDir, fileName)) || File.Exists(Path.Combine(localFontDir, Path.GetFileName(fontPath))))
@@ -84,9 +84,9 @@ public class WindowsFontInstaller : IFontInstaller
 
             using (var currentVersion = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion"))
             {
-                if (!currentVersion!.GetSubKeyNames().Contains("Fonts"))
+                if (!currentVersion!.GetSubKeyNames().Contains(FontConsts.FontRegistryKeyName))
                 {
-                    currentVersion.CreateSubKey("Fonts")!.Dispose();
+                    currentVersion.CreateSubKey(FontConsts.FontRegistryKeyName)!.Dispose();
                 }
             }
 
@@ -122,7 +122,7 @@ public class WindowsFontInstaller : IFontInstaller
             if (fontNameOrPath.Contains("\\") || fontNameOrPath.Contains("/") || Path.IsPathRooted(fontNameOrPath) || fontNameOrPath.Contains(".."))
                 fontNameOrPath = Path.GetFullPath(fontNameOrPath).Replace("/", "\\"); //normalize
 
-            var localFontDir = FontConsts.GetLocalFontDirectory();
+            var localFontDir = FontConsts.GetMachineFontDirectory();
             //handle full path inside local font directory passed
             if (Path.IsPathRooted(fontNameOrPath))
             {
@@ -218,14 +218,14 @@ public class WindowsFontInstaller : IFontInstaller
             // Ensure fonts registry key exists
             using (var currentVersion = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion"))
             {
-                if (!currentVersion!.GetSubKeyNames().Contains("Fonts"))
+                if (!currentVersion!.GetSubKeyNames().Contains(FontConsts.FontRegistryKeyName))
                 {
-                    currentVersion.CreateSubKey("Fonts")!.Dispose();
+                    currentVersion.CreateSubKey(FontConsts.FontRegistryKeyName)!.Dispose();
                 }
             }
 
             // Remove from current user registry
-            using (var fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", true)!)
+            using (var fontsKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", true)!)
             {
                 if (fontsKey == null)
                     throw new InvalidOperationException($"{fileName}: Unable to open the fonts registry key.");
