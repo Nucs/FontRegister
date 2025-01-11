@@ -8,10 +8,8 @@
         <AssemblyTitle>FontRegister</AssemblyTitle>
         <AssemblyProduct>FontRegister</AssemblyProduct>
         <AssemblyCopyright>Copyright © Eli Belash / Nucs 2025</AssemblyCopyright>
-        <AssemblyVersion>2.1.0</AssemblyVersion>
         <LangVersion>10</LangVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>2.1.0</Version>
         <Title>FontRegister</Title>
         <Description>A library and a cli tool to install/uninstall fonts directly in windows, supporting bulk installs, folder installs.</Description>
         <Copyright>Eli Belash @ 2025</Copyright>
