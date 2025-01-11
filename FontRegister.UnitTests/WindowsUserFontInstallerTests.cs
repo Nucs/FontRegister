@@ -34,21 +34,46 @@ namespace FontRegister.UnitTests
             }
         }
 
-        [Test]
-        public void InstallFont_WithInvalidPath_ReturnsFalse()
+        [TestCase(@"C:\Windows\Fonts\arial.ttf", TestName = "Absolute path")]
+        [TestCase(@"arial.ttf", TestName = "Just filename with extension")]
+        [TestCase(@"arial", TestName = "Just filename without extension")]
+        [TestCase(@"./fonts/arial.ttf", TestName = "Relative path")]
+        [TestCase(@"..\fonts\arial.ttf", TestName = "Parent relative path")]
+        [TestCase(@"fonts/arial.ttf", TestName = "Forward slash path")]
+        public void UninstallFont_WithVariousPathFormats_HandlesPathCorrectly(string fontPath)
         {
             // Arrange
-            var invalidPath = Path.Combine(_tempFontDirectory, "nonexistent.ttf");
+            var fontDir = FontConsts.GetLocalFontDirectory();
+            var normalizedName = Path.GetFileName(fontPath);
+            if (!Path.HasExtension(normalizedName))
+                normalizedName += ".ttf";
 
             // Act
-            var result = _installer.InstallFont(invalidPath);
+            var result = _installer.UninstallFont(fontPath);
 
             // Assert
-            Assert.That(result, Is.False);
+            Assert.That(result, Is.False, "Should return false for non-existent font");
         }
 
-        [Test, Ignore("TODO")]
-        public void UninstallFont_WithInvalidName_ReturnsFalse()
+        [Test]
+        public void UninstallFont_WithMultipleExtensions_ThrowsException()
+        {
+            // Arrange
+            var fontDir = FontConsts.GetLocalFontDirectory();
+            var fontName = "TestFont";
+            var ttfPath = Path.Combine(fontDir, $"{fontName}.ttf");
+            var otfPath = Path.Combine(fontDir, $"{fontName}.otf");
+
+            File.WriteAllText(ttfPath, "dummy content");
+            File.WriteAllText(otfPath, "dummy content");
+
+            // Act & Assert
+            var ex = Assert.Throws<InvalidOperationException>(() => _installer.UninstallFont(fontName));
+            StringAssert.Contains("Multiple font files found", ex.Message);
+        }
+
+        [Test]
+        public void InstallFont_WithInvalidPath_ReturnsFalse()
         {
             // Arrange
             var invalidName = "NonExistentFont";
