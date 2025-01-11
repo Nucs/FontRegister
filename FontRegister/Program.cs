@@ -3,8 +3,16 @@ using FontRegister.Abstraction;
 
 namespace FontRegister;
 
+/// <summary>
+/// Main entry point for the Font Registration utility.
+/// </summary>
 public class Program
 {
+    /// <summary>
+    /// Main entry point that handles font installation and uninstallation commands.
+    /// </summary>
+    /// <param name="args">Command line arguments for specifying operations and font paths.</param>
+    /// <returns>0 for success, 1 for usage errors or failures.</returns>
     public static int Main(string[] args)
     {
         try

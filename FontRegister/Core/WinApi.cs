@@ -3,6 +3,9 @@ using System.Security.Principal;
 
 namespace FontRegister;
 
+/// <summary>
+/// Provides access to Windows API functions for font management and system notifications.
+/// </summary>
 internal static class WinApi
 {
     [DllImport("gdi32.dll", CharSet = CharSet.Unicode, EntryPoint = "AddFontResourceW")]
@@ -30,6 +33,10 @@ internal static class WinApi
     public static extern int SHChangeNotify(int eventId, uint flags, IntPtr item1, IntPtr item2);
     
     
+    /// <summary>
+    /// Checks if the current process has administrator privileges.
+    /// </summary>
+    /// <returns>True if running with administrator privileges, false otherwise.</returns>
     public static bool CheckAdministratorAccess()
     {
         using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
