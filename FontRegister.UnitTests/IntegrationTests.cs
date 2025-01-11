@@ -13,16 +13,28 @@ using Polly;
 namespace FontRegister.UnitTests
 {
     [TestFixture("Historic.otf", false)]
+    [TestFixture("Historic.otf", true)]
     [TestFixture("Mang Kenapa.otf", false)]
+    [TestFixture("Mang Kenapa.otf", true)]
     [TestFixture("Mang Kenapa.ttf", false)]
+    [TestFixture("Mang Kenapa.ttf", true)]
     [TestFixture("steelfis.fon", false)]
+    [TestFixture("steelfis.fon", true)]
     [TestFixture("meiryo.ttc", false)]
+    [TestFixture("meiryo.ttc", true)]
     [TestFixture("Mang_Kenapa.fnt", false)]
+    [TestFixture("Mang_Kenapa.fnt", true)]
     [TestFixture("JetBrainsMono-Regular.otf", false)]
+    [TestFixture("JetBrainsMono-Regular.otf", true)]
     public class IntegrationTests
     {
         private readonly bool _machineWide;
         private const string TEST_FONT_PATTERN = @"TestFont_\w+";
+
+        private string[] GetScopeArgs()
+        {
+            return _machineWide ? new[] { "--machine" } : new[] { "--user" };
+        }
         private Random _random = new Random();
         private string _tempFontDirectory;
         private string _userFontDirectory;
@@ -128,7 +140,10 @@ namespace FontRegister.UnitTests
         {
             // Arrange
             string randomFontPath = GetRandomTestFontPath();
-            var args = new[] { "install", randomFontPath };
+            var args = new[] { "install" }
+                .Concat(GetScopeArgs())
+                .Concat(new[] { randomFontPath })
+                .ToArray();
 
             // Act
             var result = FontRegister.Program.Main(args);
@@ -144,7 +159,10 @@ namespace FontRegister.UnitTests
         {
             // Arrange
             var randomFontPaths = GetRandomTestFontPaths(3);
-            var args = new[] { "install" }.Concat(randomFontPaths).ToArray();
+            var args = new[] { "install" }
+                .Concat(GetScopeArgs())
+                .Concat(randomFontPaths)
+                .ToArray();
 
             // Act
             var result = FontRegister.Program.Main(args);
@@ -163,7 +181,10 @@ namespace FontRegister.UnitTests
         {
             // Arrange
             string randomFontPath = GetRandomTestFontPath();
-            var args = new[] { "install", randomFontPath };
+            var args = new[] { "install" }
+                .Concat(GetScopeArgs())
+                .Concat(new[] { randomFontPath })
+                .ToArray();
 
             // Act
             var firstResult = FontRegister.Program.Main(args);
@@ -281,13 +302,8 @@ namespace FontRegister.UnitTests
         private bool IsFontInstalled(string fontName, bool checkingIfUninstalled = false)
         {
             var retries = checkingIfUninstalled
-                ? new[]
-                {
-                    TimeSpan.FromMilliseconds(100),
-                    TimeSpan.FromMilliseconds(200),
-                }
-                : new[]
-                {
+                ? new[] { TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(200) }
+                : new[] { 
                     TimeSpan.FromMilliseconds(100),
                     TimeSpan.FromMilliseconds(200),
                     TimeSpan.FromMilliseconds(400),
@@ -303,16 +319,21 @@ namespace FontRegister.UnitTests
             {
                 return retryPolicy.Execute(() =>
                 {
-                    // Check in user font directory
+                    string fontDirectory = _machineWide ? FontConsts.GetMachineFontDirectory() : _userFontDirectory;
+                    RegistryKey registryKey = _machineWide 
+                        ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey)
+                        : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey);
+
+                    // Check in font directory
                     if (FontConsts.SupportedExtensions.Any(ext =>
-                            File.Exists(Path.Combine(_userFontDirectory, fontName + ext))))
+                            File.Exists(Path.Combine(fontDirectory, fontName + ext))))
                     {
                         // Check registry
-                        using (var fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts"))
+                        using (registryKey)
                         {
-                            if (fontsKey != null)
+                            if (registryKey != null)
                             {
-                                if (fontsKey.GetValueNames().Any(n => n.Contains(fontName, StringComparison.OrdinalIgnoreCase)))
+                                if (registryKey.GetValueNames().Any(n => n.Contains(fontName, StringComparison.OrdinalIgnoreCase)))
                                     return true;
                             }
                         }
@@ -326,11 +347,14 @@ namespace FontRegister.UnitTests
                 Console.WriteLine("Looking for font: " + fontName);
                 if (!checkingIfUninstalled)
                 {
-                    using var fontsKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts");
-                    if (fontsKey != null)
+                    using var registryKey = _machineWide 
+                        ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey)
+                        : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey);
+                    
+                    if (registryKey != null)
                     {
                         Console.WriteLine("Installed fonts:");
-                        foreach (var fontNameKey in fontsKey.GetValueNames())
+                        foreach (var fontNameKey in registryKey.GetValueNames())
                         {
                             Console.WriteLine(fontNameKey);
                         }
