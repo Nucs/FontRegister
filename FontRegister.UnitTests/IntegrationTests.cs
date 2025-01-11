@@ -12,19 +12,20 @@ using Polly;
 
 namespace FontRegister.UnitTests
 {
+    //AI! use enum instead of true false
     [TestFixture("Historic.otf", false)]
-    [TestFixture("Historic.otf", true)]
     [TestFixture("Mang Kenapa.otf", false)]
-    [TestFixture("Mang Kenapa.otf", true)]
     [TestFixture("Mang Kenapa.ttf", false)]
-    [TestFixture("Mang Kenapa.ttf", true)]
     [TestFixture("steelfis.fon", false)]
-    [TestFixture("steelfis.fon", true)]
     [TestFixture("meiryo.ttc", false)]
-    [TestFixture("meiryo.ttc", true)]
     [TestFixture("Mang_Kenapa.fnt", false)]
-    [TestFixture("Mang_Kenapa.fnt", true)]
     [TestFixture("JetBrainsMono-Regular.otf", false)]
+    [TestFixture("Historic.otf", true)]
+    [TestFixture("Mang Kenapa.otf", true)]
+    [TestFixture("Mang Kenapa.ttf", true)]
+    [TestFixture("steelfis.fon", true)]
+    [TestFixture("meiryo.ttc", true)]
+    [TestFixture("Mang_Kenapa.fnt", true)]
     [TestFixture("JetBrainsMono-Regular.otf", true)]
     public class IntegrationTests
     {
