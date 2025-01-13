@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using FontRegister.Abstraction;
 
 namespace FontRegister;
+
 /// <summary>
 /// Implements font installation operations for the current user's context.
 /// </summary>
@@ -182,7 +183,10 @@ public class WindowsUserFontInstaller : IFontInstaller
                 fontNameOrPath = Path.GetFullPath(fontNameOrPath).Replace("/", "\\"); //normalize
                 fontPath = fontNameOrPath;
                 if (!fontNameOrPath.StartsWith(fontDir, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException($"{fileName}: Cannot uninstall fonts outside the local font directory, path: {fontNameOrPath}, expected: {Path.Combine(fontDir, fontNameOrPath)}");
+                {
+                    //we got a full path thats outside the font directory, we search for the file name
+                    return UninstallFont(Path.GetFileName(fontNameOrPath));
+                }
             }
             else
             {
@@ -284,6 +288,7 @@ public class WindowsUserFontInstaller : IFontInstaller
                 if (fontsKey == null)
                     throw new InvalidOperationException($"{fileName}: Unable to open the fonts registry key.");
 
+                var fontName = Path.GetFileNameWithoutExtension(fileName);
                 var installedFontsValueNames = fontsKey.GetValueNames();
 
                 // Attempt deleting when registry value is just the file name or full path
@@ -296,7 +301,7 @@ public class WindowsUserFontInstaller : IFontInstaller
                             regName = regName.Replace("/", "\\");
 
                         return regName.Equals(fontPath, StringComparison.OrdinalIgnoreCase) ||
-                               regName.ToLower().Contains(fileName.ToLower());
+                               regName.ToLower().Contains(fontName.ToLower());
                     });
 
                 if (registryValueName != null)
