@@ -41,6 +41,11 @@ fontregister install -m "c:/folder" "c:/font.ttf"
 # or
 fontregister install --all-users "c:/folder" "c:/font.ttf"
 
+# Install fonts by referencing their original location (no copying):
+fontregister install --external "c:/folder/myfont.ttf"
+# This will register the font but keep it in its original location
+# instead of copying it to the Windows Fonts directory
+
 # Deregister/uninstall fonts:
 # Uninstall can accept font name (as it appears in registry), filename with extension or path to the font that was installed
 fontregister uninstall "fontname1" "fontname2"
@@ -84,7 +89,10 @@ PM> Install-Package FontRegister
 var notifier = new WindowsSystemNotifier(); //pass null to not notify other apps
 var userInstaller = new WindowsUserFontInstaller(notifier);
 var fontManager = new FontManager(userInstaller);
-fontManager.InstallFonts(new[] { "C:/myfonts/myfont.ttf" });
+// Install by copying to Windows Fonts directory (default)
+fontManager.InstallFonts(new[] { "C:/myfonts/myfont.ttf" }, false);
+// Install by referencing original location
+fontManager.InstallFonts(new[] { "C:/myfonts/myfont.ttf" }, true);
 
 //in bulk for all users
 var machineInstaller = new WindowsMachineFontInstaller(notifier);
