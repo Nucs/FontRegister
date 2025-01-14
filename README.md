@@ -101,12 +101,12 @@ PM> Install-Package FontRegister
 
 //single file for current user
 var notifier = new WindowsSystemNotifier(); //pass null to not notify other apps
-var userInstaller = new WindowsUserFontInstaller(notifier);
+var userInstaller = new WindowsFontInstaller(notifier, InstallationScope.User);
 var fontManager = new FontManager(userInstaller);
 fontManager.InstallFonts(new[] { "C:/myfonts/myfont.ttf" });
 
-//in bulk for all users
-var machineInstaller = new WindowsMachineFontInstaller(notifier);
+//in bulk for all users (machine-wide)
+var machineInstaller = new WindowsFontInstaller(notifier, InstallationScope.Machine);
 var fontManager = new FontManager(machineInstaller);
 fontManager.InstallFonts(new[] { "C:/myfonts", "C:/myfonts2/myfont.ttf" });
 ```
