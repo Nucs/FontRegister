@@ -433,17 +433,32 @@ namespace FontRegister.UnitTests
                         ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey)
                         : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey);
 
-                    // Check in font directory
-                    if (FontConsts.SupportedExtensions.Any(ext =>
-                            File.Exists(Path.Combine(_fontDirectory, fontName + ext))))
+                    // Check registry first
+                    using (registryKey)
                     {
-                        // Check registry
-                        using (registryKey)
+                        if (registryKey != null)
                         {
-                            if (registryKey != null)
+                            var matchingKeys = registryKey.GetValueNames()
+                                .Where(n => n.Contains(fontName, StringComparison.OrdinalIgnoreCase))
+                                .ToList();
+
+                            foreach (var key in matchingKeys)
                             {
-                                if (registryKey.GetValueNames().Any(n => n.Contains(fontName, StringComparison.OrdinalIgnoreCase)))
-                                    return true;
+                                var fontPath = (string?)registryKey.GetValue(key);
+                                if (!string.IsNullOrEmpty(fontPath))
+                                {
+                                    // For external fonts, check if the file exists at the registered path
+                                    if (Path.IsPathRooted(fontPath))
+                                    {
+                                        if (File.Exists(fontPath))
+                                            return true;
+                                    }
+                                    // For regular installations, check in font directory
+                                    else if (File.Exists(Path.Combine(_fontDirectory, fontPath)))
+                                    {
+                                        return true;
+                                    }
+                                }
                             }
                         }
                     }
