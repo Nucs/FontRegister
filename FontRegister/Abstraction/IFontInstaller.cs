@@ -6,6 +6,13 @@
 public interface IFontInstaller
 {
     /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fontNameOrPath"></param>
+    /// <returns></returns>
+    FontIdentification? IdentifyFont(string fontNameOrPath);
+    
+    /// <summary>
     /// Installs a font from the specified file path.
     /// </summary>
     /// <param name="fontPath">The full path to the font file to install.</param>

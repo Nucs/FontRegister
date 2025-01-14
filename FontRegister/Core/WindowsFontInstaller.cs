@@ -30,7 +30,7 @@ public class WindowsFontInstaller : IFontInstaller
         _scope = scope;
     }
 
-    public FontIdentification? GetIdentification(string fontNameOrPath)
+    public FontIdentification? IdentifyFont(string fontNameOrPath)
     {
         fontNameOrPath = TryNormalizePath(fontNameOrPath);
         var logName = Path.GetFileName(fontNameOrPath);
@@ -57,7 +57,7 @@ public class WindowsFontInstaller : IFontInstaller
             fontPath = TryNormalizePath(fontPath);
             logName = Path.GetFileName(fontPath);
 
-            identifcation = GetIdentification(fontPath);
+            identifcation = IdentifyFont(fontPath);
             if (identifcation != null)
             {
                 Console.WriteLine($"{Path.GetFileName(identifcation.FontPath)}: Font already installed.");
