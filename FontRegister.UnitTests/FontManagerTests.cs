@@ -6,7 +6,6 @@ using Polly;
 
 namespace FontRegister.UnitTests
 {
-    //AI! all font files used here must be deleted afterwards via try-finally and they must have random string in them
     [TestFixture(true)]
     [TestFixture(false)]
     public class FontManagerTests
@@ -121,11 +120,19 @@ namespace FontRegister.UnitTests
             // Arrange
             var directory = Path.Combine(_tempFontDirectory, "mixed");
             Directory.CreateDirectory(directory);
-            File.WriteAllText(Path.Combine(directory, "randomname.txt"), "dummy content");
-            File.WriteAllText(Path.Combine(directory, "randomname.doc"), "dummy content");
+            var txtFile = Path.Combine(directory, TestConsts.GetTestFontFileName("test.txt"));
+            var docFile = Path.Combine(directory, TestConsts.GetTestFontFileName("test.doc"));
+            try {
+                File.WriteAllText(txtFile, "dummy content");
+                File.WriteAllText(docFile, "dummy content");
 
-            // Act & Assert
-            Assert.DoesNotThrow(() => _fontManager.InstallFonts(new[] { directory }));
+                // Act & Assert
+                Assert.DoesNotThrow(() => _fontManager.InstallFonts(new[] { directory }));
+            }
+            finally {
+                _fontInstaller.UninstallFont(txtFile);
+                _fontInstaller.UninstallFont(docFile);
+            }
         }
 
         [Test]
@@ -146,11 +153,19 @@ namespace FontRegister.UnitTests
             var subDir = Path.Combine(rootDir, "sub");
             Directory.CreateDirectory(rootDir);
             Directory.CreateDirectory(subDir);
-            File.WriteAllText(Path.Combine(rootDir, "randomname1.ttf"), "dummy content");
-            File.WriteAllText(Path.Combine(subDir, "randomname2.ttf"), "dummy content");
+            var font1Path = Path.Combine(rootDir, TestConsts.GetTestFontFileName("test1.ttf"));
+            var font2Path = Path.Combine(subDir, TestConsts.GetTestFontFileName("test2.ttf"));
+            try {
+                File.WriteAllText(font1Path, "dummy content");
+                File.WriteAllText(font2Path, "dummy content");
 
-            // Act & Assert
-            Assert.DoesNotThrow(() => _fontManager.InstallFonts(new[] { rootDir }));
+                // Act & Assert
+                Assert.DoesNotThrow(() => _fontManager.InstallFonts(new[] { rootDir }));
+            }
+            finally {
+                _fontInstaller.UninstallFont(font1Path);
+                _fontInstaller.UninstallFont(font2Path);
+            }
         }
     }
 }
