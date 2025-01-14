@@ -57,18 +57,19 @@ public class FinalizationTests
             }
         }
         
-        //AI! this code from here on must run all in parallel with new task for every operation
+        // Clean up font files from font directories in parallel
+        var userFiles = Directory.GetFiles(FontConsts.GetLocalFontDirectory(), "TestFont_*.*");
+        var machineFiles = Directory.GetFiles(FontConsts.GetMachineFontDirectory(), "TestFont_*.*");
 
-        // Clean up font files from font directories
-        foreach (var file in Directory.GetFiles(FontConsts.GetLocalFontDirectory(), "TestFont_*.*"))
+        Parallel.ForEach(userFiles, file =>
         {
             TryDeleteFile(file, InstallationScope.User);
-        }
+        });
 
-        foreach (var file in Directory.GetFiles(FontConsts.GetMachineFontDirectory(), "TestFont_*.*"))
+        Parallel.ForEach(machineFiles, file =>
         {
             TryDeleteFile(file, InstallationScope.Machine);
-        }
+        });
     }
 
     private void CleanupFontsFolders() 
