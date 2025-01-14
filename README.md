@@ -97,18 +97,38 @@ PM> Install-Package FontRegister
 ```
 
 ```csharp
-//Note: All font operations require administrator rights
+using FontRegister;
+using FontRegister.Abstraction;
 
-//single file for current user
-var notifier = new WindowsSystemNotifier(); //pass null to not notify other apps
+// Note: All font operations require administrator rights
+
+// Create system notifier to refresh font lists in other apps
+var notifier = new WindowsSystemNotifier();
+
+// Example 1: Install single font for current user
 var userInstaller = new WindowsFontInstaller(notifier, InstallationScope.User);
-var fontManager = new FontManager(userInstaller);
-fontManager.InstallFonts(new[] { "C:/myfonts/myfont.ttf" });
+var userFontManager = new FontManager(userInstaller);
+userFontManager.InstallFonts(["C:/myfonts/myfont.ttf"]);
 
-//in bulk for all users (machine-wide)
+// Example 2: Install multiple fonts machine-wide
 var machineInstaller = new WindowsFontInstaller(notifier, InstallationScope.Machine);
-var fontManager = new FontManager(machineInstaller);
-fontManager.InstallFonts(new[] { "C:/myfonts", "C:/myfonts2/myfont.ttf" });
+var machineFontManager = new FontManager(machineInstaller);
+machineFontManager.InstallFonts([
+    "C:/myfonts",          // Directory containing fonts
+    "C:/myfonts2/myfont.ttf" // Single font file
+]);
+
+// Example 3: Uninstall fonts
+machineFontManager.UninstallFonts([
+    "MyFontName",          // By font name
+    "myfont.ttf",          // By filename
+    "C:/myfonts/myfont.ttf" // By full path
+]);
+
+// Example 4: Install without system notifications
+var silentInstaller = new WindowsFontInstaller(null, InstallationScope.User);
+var silentFontManager = new FontManager(silentInstaller);
+silentFontManager.InstallFonts(["C:/myfonts/myfont.ttf"]);
 ```
 
 ## Contributing
