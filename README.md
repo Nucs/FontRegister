@@ -73,6 +73,8 @@ Options:
   --user, -u        : Install for current user only (default)
   --machine, -m     : Install for all users
   --all-users       : Same as --machine
+  --external        : Install fonts by referencing their original location
+                      instead of copying them to the Windows Fonts directory
 Note: All font operations require administrator rights
 ```
 
