@@ -50,6 +50,8 @@ public class FinalizationTests
     {
         var regex = new Regex(TEST_FONT_PATTERN.Replace("@", testName), RegexOptions.IgnoreCase);
 
+        //AI! in here we must find all external fonts by registry and then remove them using TryDelete 
+        
         // Clean up font files from font directory based on scope
         foreach (var file in Directory.GetFiles(FontConsts.GetLocalFontDirectory(), "*.*"))
         {
@@ -66,6 +68,8 @@ public class FinalizationTests
                 TryDeleteFile(file, InstallationScope.Machine);
             }
         }
+        
+        
     }
 
     private void TryDeleteFile(string filePath, InstallationScope scope)
