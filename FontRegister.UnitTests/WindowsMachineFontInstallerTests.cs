@@ -98,13 +98,18 @@ namespace FontRegister.UnitTests
         {
             // Arrange
             var outsidePath = Path.Combine(_tempFontDirectory, "randomname.ttf");
-            File.WriteAllText(outsidePath, "dummy content");
+            try {
+                File.WriteAllText(outsidePath, "dummy content");
 
-            // Act
-            var result = _installer.UninstallFont(outsidePath);
+                // Act
+                var result = _installer.UninstallFont(outsidePath);
 
-            // Assert
-            Assert.That(result.UninstalledSuccessfully, Is.False);
+                // Assert
+                Assert.That(result.UninstalledSuccessfully, Is.False);
+            }
+            finally {
+                _installer.UninstallFont(outsidePath);
+            }
         }
 
         [Test]
@@ -112,13 +117,18 @@ namespace FontRegister.UnitTests
         {
             // Arrange
             var unsupportedPath = Path.Combine(_tempFontDirectory, "randomname.xyz");
-            File.WriteAllText(unsupportedPath, "dummy content");
+            try {
+                File.WriteAllText(unsupportedPath, "dummy content");
 
-            // Act
-            var result = _installer.InstallFont(unsupportedPath);
+                // Act
+                var result = _installer.InstallFont(unsupportedPath);
 
-            // Assert
-            Assert.That(result.InstalledSuccessfully, Is.False);
+                // Assert
+                Assert.That(result.InstalledSuccessfully, Is.False);
+            }
+            finally {
+                _installer.UninstallFont(unsupportedPath);
+            }
         }
 
         [Test]
@@ -126,21 +136,26 @@ namespace FontRegister.UnitTests
         {
             // Arrange
             var fontPath = Path.Combine(_tempFontDirectory, "randomname.ttf");
-            File.WriteAllText(fontPath, "dummy content");
             var relativePath = Path.GetFileName(fontPath);
             var currentDirectory = Directory.GetCurrentDirectory();
-            Directory.SetCurrentDirectory(_tempFontDirectory);
-            try
-            {
-                // Act
-                var result = _installer.InstallFont(relativePath);
+            try {
+                File.WriteAllText(fontPath, "dummy content");
+                Directory.SetCurrentDirectory(_tempFontDirectory);
+                try
+                {
+                    // Act
+                    var result = _installer.InstallFont(relativePath);
 
-                // Assert
-                Assert.That(result.InstalledSuccessfully, Is.False); // False because it's not a valid font file
+                    // Assert
+                    Assert.That(result.InstalledSuccessfully, Is.False); // False because it's not a valid font file
+                }
+                finally
+                {
+                    Directory.SetCurrentDirectory(currentDirectory);
+                }
             }
-            finally
-            {
-                Directory.SetCurrentDirectory(currentDirectory);
+            finally {
+                _installer.UninstallFont(fontPath);
             }
         }
 
@@ -149,9 +164,15 @@ namespace FontRegister.UnitTests
         {
             // Arrange
             var fontPath = Path.Combine(_tempFontDirectory, "randomname.ttf");
+            try {
+                File.WriteAllText(fontPath, "dummy content");
 
-            // Act & Assert
-            Assert.DoesNotThrow(() => _installer.UninstallFont(fontPath));
+                // Act & Assert
+                Assert.DoesNotThrow(() => _installer.UninstallFont(fontPath));
+            }
+            finally {
+                _installer.UninstallFont(fontPath);
+            }
         }
     }
 }
