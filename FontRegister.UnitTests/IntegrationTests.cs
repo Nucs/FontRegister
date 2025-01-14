@@ -274,6 +274,15 @@ namespace FontRegister.UnitTests
             Assert.That(result, Is.EqualTo(0));
             Assert.That(File.Exists(randomFontPath), Is.True, "Original font file should still exist");
             Assert.That(IsFontInstalled(Path.GetFileNameWithoutExtension(randomFontPath)), Is.True, "Font should be installed");
+
+            // Verify registry points to original location
+            using var fontsKey = _scope == InstallationScope.Machine 
+                ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey)
+                : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey);
+            var registryPath = fontsKey?.GetValue(Path.GetFileNameWithoutExtension(randomFontPath))?.ToString();
+            Assert.That(registryPath, Is.Not.Null, "Registry entry should exist");
+            Assert.That(Path.GetFullPath(registryPath!), Is.EqualTo(Path.GetFullPath(randomFontPath)), 
+                "Registry should point to original font location");
         }
 
         [Test]
@@ -296,6 +305,15 @@ namespace FontRegister.UnitTests
             Assert.That(result, Is.EqualTo(0));
             Assert.That(File.Exists(destinationPath), Is.False, "Font should not be copied to font directory");
             Assert.That(IsFontInstalled(Path.GetFileNameWithoutExtension(randomFontPath)), Is.True, "Font should be installed");
+
+            // Verify registry points to original location
+            using var fontsKey = _scope == InstallationScope.Machine 
+                ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey)
+                : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey);
+            var registryPath = fontsKey?.GetValue(Path.GetFileNameWithoutExtension(randomFontPath))?.ToString();
+            Assert.That(registryPath, Is.Not.Null, "Registry entry should exist");
+            Assert.That(Path.GetFullPath(registryPath!), Is.EqualTo(Path.GetFullPath(randomFontPath)), 
+                "Registry should point to original font location");
         }
 
         [Test]
