@@ -8,8 +8,7 @@ FontRegister is both a command-line tool and a csharp native library (pure code)
 ## Key Features
 - Ability to install/uninstall fonts in bulk.
 - Notify Windows OS about new fonts refreshing the font-lists on other apps immediately (photoshop, word and so on).
-- Written in pure C# and Pinvoke.
-- Code install/uninstall API via Nuget supporting .NET 4.8 and .NET 6.0/8.0.
+- Written in pure C# and Pinvoke with a simple code-first API.
 
 ## Supported Font Types
 
