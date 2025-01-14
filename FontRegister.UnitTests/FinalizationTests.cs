@@ -18,7 +18,7 @@ public class FinalizationTests
     public void Empty()
     {
     }
-    
+
     [OneTimeTearDown]
     public void RunAfterAllTests()
     {
@@ -56,35 +56,35 @@ public class FinalizationTests
                 }
             }
         }
-        
+
         // Clean up font files from font directories in parallel
         var userFiles = Directory.GetFiles(FontConsts.GetLocalFontDirectory(), "TestFont_*.*");
         var machineFiles = Directory.GetFiles(FontConsts.GetMachineFontDirectory(), "TestFont_*.*");
 
-        Parallel.ForEach(userFiles, file =>
-        {
-            TryDeleteFile(file, InstallationScope.User);
-        });
+        Parallel.ForEach(userFiles, file => { TryDeleteFile(file, InstallationScope.User); });
 
-        Parallel.ForEach(machineFiles, file =>
-        {
-            TryDeleteFile(file, InstallationScope.Machine);
-        });
+        Parallel.ForEach(machineFiles, file => { TryDeleteFile(file, InstallationScope.Machine); });
     }
 
-    private void CleanupFontsFolders() 
+    private void CleanupFontsFolders()
     {
         Parallel.ForEach(Directory.GetDirectories(Environment.ExpandEnvironmentVariables("%TEMP%"), "TestFonts_*", SearchOption.TopDirectoryOnly), directory =>
         {
-            Policy.Handle<Exception>()
-                .WaitAndRetry(10, _ => TimeSpan.FromMilliseconds(10))
-                .Execute(() =>
-                {
-                    if (Directory.Exists(directory))
+            try
+            {
+                Policy.Handle<Exception>()
+                    .WaitAndRetry(10, _ => TimeSpan.FromMilliseconds(10))
+                    .Execute(() =>
                     {
-                        Directory.Delete(directory, true);
-                    }
-                });
+                        if (Directory.Exists(directory))
+                        {
+                            Directory.Delete(directory, true);
+                        }
+                    });
+            }
+            catch (Exception e)
+            {
+            }
         });
     }
 

@@ -72,7 +72,7 @@ namespace FontRegister.UnitTests
             Console.SetOut(consoleOutput);
 
             // Act
-            var result = _installer.InstallFont(invalidPath, false);
+            var result = _installer.InstallFont(invalidPath);
 
             // Assert
             Assert.That(result.InstalledSuccessfully, Is.False);
@@ -114,7 +114,7 @@ namespace FontRegister.UnitTests
             File.WriteAllText(unsupportedPath, "dummy content");
 
             // Act
-            var result = _installer.InstallFont(unsupportedPath, false);
+            var result = _installer.InstallFont(unsupportedPath);
 
             // Assert
             Assert.That(result.InstalledSuccessfully, Is.False);
@@ -132,7 +132,7 @@ namespace FontRegister.UnitTests
             try
             {
                 // Act
-                var result = _installer.InstallFont(relativePath, false);
+                var result = _installer.InstallFont(relativePath);
 
                 // Assert
                 Assert.That(result.InstalledSuccessfully, Is.False); // False because it's not a valid font file

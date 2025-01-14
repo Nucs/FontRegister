@@ -51,9 +51,7 @@ namespace FontRegister.UnitTests
         [SetUp]
         public void Setup()
         {
-            var testName = TestContext.CurrentContext.Test.FullName;
-            testName = string.Join("", testName.Split(Path.GetInvalidFileNameChars())).Replace(".","_").Replace(",","_");
-            _tempDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + testName + "_" + Guid.NewGuid().ToString("N"));
+            _tempDirectory = TestConsts.GetTestPath();
             Directory.CreateDirectory(_tempDirectory);
             while (!Directory.Exists(_tempDirectory))
             {
@@ -71,8 +69,7 @@ namespace FontRegister.UnitTests
         {
             Console.WriteLine("Test Completed");
             Console.WriteLine("---");
-            var testName = TestContext.CurrentContext.Test.FullName;
-            testName = string.Join("", testName.Split(Path.GetInvalidFileNameChars())).Replace(".","_").Replace(",","_");
+            var testName = TestConsts.GetTestFontFileName(FileName, "", false);
             CleanupTestFonts(testName);
         }
 
@@ -95,12 +92,10 @@ namespace FontRegister.UnitTests
 
         private void CleanupTestFonts(string testName)
         {
-            var regex = new Regex(TEST_FONT_PATTERN.Replace("@", testName), RegexOptions.IgnoreCase);
-
             // Clean up font files from font directory based on scope
             foreach (var file in Directory.GetFiles(_fontDirectory, "*.*"))
             {
-                if (regex.IsMatch(Path.GetFileNameWithoutExtension(file)))
+                if (file.Contains(testName))
                 {
                     TryDeleteFile(file);
                 }
@@ -312,11 +307,7 @@ namespace FontRegister.UnitTests
 
         private string CreateTestFont()
         {
-            var testName = TestContext.CurrentContext.Test.FullName;
-            testName = string.Join("", testName.Split(Path.GetInvalidFileNameChars())).Replace(".","_").Replace(",","_");
-
-            string fontName = $"TestFont_{testName}_{Guid.NewGuid().ToString("N").Substring(0, 16)}";
-            string fontPath = Path.Combine(_tempDirectory, $"{fontName}{Path.GetExtension(FileName)}");
+            var fontPath = TestConsts.GetTestFontFilePath(_tempDirectory, FileName);
 
             // Create a minimal OTF file
             byte[] fontFile = EmbeddedResourceHelper.ReadEmbeddedResource(FileName);

@@ -48,7 +48,7 @@ public class WindowsFontInstaller : IFontInstaller
     //C:\Program Files\WindowsApps\Microsoft.WindowsTerminal_1.21.3231.0_x64__8wekyb3d8bbwe\TestFont_15f8920e.otf
     //./TestFont_15f8920e
     //../Fonts/TestFont_15f8920e.otf
-    public (bool InstalledSuccessfully, FontIdentification? Identfication) InstallFont(string fontPath, bool installAsExternalFontPath)
+    public (bool InstalledSuccessfully, FontIdentification? Identfication) InstallFont(string fontPath)
     {
         string? logName = null;
         FontIdentification? identifcation = null;
@@ -86,22 +86,15 @@ public class WindowsFontInstaller : IFontInstaller
                 FontExtension = Path.GetExtension(fontPath)
             };
 
-
             //figure and adjust font name based on file type
             var fontName = Path.GetFileNameWithoutExtension(identifcation.FontPath);
             fontName = char.ToUpper(fontName[0]) + fontName.Substring(1); //first letter capital
             identifcation.RegistryValueName = FontConsts.GetRegistryFontName(identifcation.FontExtension, fontName);
-
-            //figure the installation destination path
-            if (!installAsExternalFontPath)
-            {
-                identifcation.RegistryRawValue = Path.Combine(FontInstallationDirectory(), Path.GetFileName(identifcation.FontPath));
-            }
-            else
-            {
-                identifcation.RegistryRawValue = identifcation.FontPath;
-            }
-
+            identifcation.RegistryRawValue = Path.Combine(FontInstallationDirectory(), Path.GetFileName(identifcation.FontPath));
+            
+            if (identifcation.FontPath.Length > 256)
+                throw new PathTooLongException($"{logName}: Font file path is too long.");
+            
             //copy the font file
             int copyAttempts = 0;
             while (true)
@@ -110,7 +103,7 @@ public class WindowsFontInstaller : IFontInstaller
                 {
                     copyAttempts++;
                     if (!File.Exists(identifcation.RegistryRawValue))
-                        File.Copy(fontPath, identifcation.RegistryRawValue, overwrite: true);
+                        File.Copy(identifcation.FontPath, identifcation.RegistryRawValue, overwrite: true);
                     break;
                 }
                 catch (Exception e)
@@ -121,14 +114,11 @@ public class WindowsFontInstaller : IFontInstaller
                 }
             }
 
-            //TODO: here or after registry?
-            // Add the font resource
-            if (WinApi.AddFontResource(identifcation.RegistryRawValue) == 0)
+            if (WinApi.AddFontResource(identifcation.FontPath) == 0)
             {
                 throw new InvalidOperationException($"{logName}: Failed to add font resource. (errorcode: {Marshal.GetLastWin32Error()})");
             }
 
-            // Add to current user registry
             using (var fontsKey = FontRegistrationRootKey().OpenSubKey(FontConsts.FontRegistryKey, true)!)
             {
                 if (fontsKey == null)
@@ -138,6 +128,7 @@ public class WindowsFontInstaller : IFontInstaller
 
                 fontsKey.SetValue(identifcation.RegistryValueName, identifcation.RegistryRawValue);
             }
+
 
             Console.WriteLine($"{logName}: Font installed successfully.");
 
@@ -252,8 +243,6 @@ public class WindowsFontInstaller : IFontInstaller
 
             //at this point we have identified the font successfully in registry.
 
-            //TODO: we should really attempt deletion of file regardless to identification
-
             if (!FontConsts.SupportedExtensions.Contains(identifcation.FontExtension, StringComparer.OrdinalIgnoreCase))
                 Console.WriteLine($"{logName}: Warning! Unsupported font has been identified: {identifcation.FontExtension}");
 
@@ -340,7 +329,7 @@ public class WindowsFontInstaller : IFontInstaller
 
         //we try to remove softly, it will likely fail but we try anyways.
         WinApi.RemoveFontResource(identification.FontPath);
-        
+
         //delete the detected file
         TryDeleteFile(identification.FontPath, logName);
         Console.WriteLine($"{logName}: Font uninstalled successfully.");
