@@ -25,39 +25,46 @@ The following font file extensions are supported:
 ## Usage
 
 ```sh
-* All font operations require administrator rights
-fontregister
+# Note: All font operations require administrator rights
 
-# Register/install fonts for current user from the following folders or specific files:
-# Note: Folders are deep-searched recursively.
-fontregister install "c:/folder" "c:/font.ttf" "./relativedir/" "./relativedir/font.otf"
-# or explicitly
+# INSTALLATION EXAMPLES:
+
+# 1. Basic Installation (for current user)
+# Installs fonts by copying them to Windows Fonts directory
+fontregister install "c:/folder" "c:/font.ttf" "./relativedir/font.otf"
+# Note: Folders are searched recursively for font files
+
+# 2. Specify Installation Scope
+# For current user (default)
 fontregister install --user "c:/folder" "c:/font.ttf"
+fontregister install -u "c:/folder" "c:/font.ttf"
 
-# Register/install fonts for all users:
+# For all users (requires admin rights)
 fontregister install --machine "c:/folder" "c:/font.ttf"
-# or
 fontregister install -m "c:/folder" "c:/font.ttf"
-# or
 fontregister install --all-users "c:/folder" "c:/font.ttf"
 
-# Install fonts by referencing their original location (no copying):
+# 3. External Font Installation
+# Registers fonts without copying them (keeps original location)
 fontregister install --external "c:/folder/myfont.ttf"
-# This will register the font but keep it in its original location
-# instead of copying it to the Windows Fonts directory
+fontregister install --external "c:/fonts-folder"
 
-# Deregister/uninstall fonts:
-# Uninstall can accept font name (as it appears in registry), filename with extension or path to the font that was installed
+# UNINSTALLATION EXAMPLES:
+
+# 1. Basic Uninstallation
 fontregister uninstall "fontname1" "fontname2"
-fontregister uninstall -m "fontname1" "fontname2"
 
+# 2. Uninstall by Different Name Formats
+# By font name as shown in Windows
 fontregister uninstall "Calibri (TrueType)" "Calibri Light"
+# By filename
 fontregister uninstall "calibril.ttf"
+# By full path
+fontregister uninstall "C:/Windows/Fonts/calibril.ttf"
 
-
-
-
-
+# 3. Uninstall with Scope
+fontregister uninstall -m "fontname"  # Machine-wide
+fontregister uninstall -u "fontname"  # User scope
 ```
 
 ## Help
