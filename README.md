@@ -25,21 +25,30 @@ The following font file extensions are supported:
 ## Usage
 
 ```sh
-# Will print help
+* All font operations require administrator rights
 fontregister
 
-# Register fonts for current user from the following folders or specific files (requires admin rights):
+# Register/install fonts for current user from the following folders or specific files:
 # Note: Folders are deep-searched recursively.
 fontregister install "c:/folder" "c:/font.ttf" "./relativedir/" "./relativedir/font.otf"
 # or explicitly
 fontregister install --user "c:/folder" "c:/font.ttf"
 
-# Register fonts for all users (requires admin rights):
+# Register/install fonts for all users:
 fontregister install --machine "c:/folder" "c:/font.ttf"
 # or
 fontregister install -m "c:/folder" "c:/font.ttf"
 # or
 fontregister install --all-users "c:/folder" "c:/font.ttf"
+
+# Deregister/uninstall fonts:
+# Uninstall can accept font name (as it appears in registry), filename with extension or path to the font that was installed
+fontregister uninstall "fontname1" "fontname2"
+fontregister uninstall -m "fontname1" "fontname2"
+
+fontregister uninstall "Calibri (TrueType)" "Calibri Light"
+fontregister uninstall "calibril.ttf"
+
 ```
 
 ## Help
