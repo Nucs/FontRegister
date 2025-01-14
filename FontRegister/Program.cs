@@ -12,7 +12,7 @@ public class Program
     /// Main entry point that handles font installation and uninstallation commands.
     /// </summary>
     /// <param name="args">Command line arguments for specifying operations and font paths.</param>
-    /// <returns>0 for success, 1 for usage errors or failures.</returns>
+    /// <returns>0 for success, 1 for errors or failures.</returns>
     public static int Main(string[] args)
     {
         try
@@ -36,11 +36,14 @@ public class Program
             var remainingArgs = new List<string>();
 
             // Parse scope flags and collect remaining arguments
-            for (int i = 1; i < args.Length; i++)
+            for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i].ToLower();
                 switch (arg)
                 {
+                    case "install":
+                    case "uninstall":
+                        continue;
                     case "--machine":
                     case "-m":
                     case "--all-users":
@@ -76,53 +79,64 @@ public class Program
 
             useMachineWide ??= false;
 
+            if (remainingArgs.Count == 0 && restartFontCache)
+            {
+                WinApi.RestartAndClearFontCacheService();
+                Console.WriteLine("Windows Font Cache service restarted.");
+                return 0;
+            }
+
             // Create the appropriate installer based on scope
             ISystemNotifier systemNotifier = new WindowsSystemNotifier();
             IFontInstaller installer = useMachineWide.Value
-                ? new WindowsMachineFontInstaller(systemNotifier)
-                : new WindowsUserFontInstaller(systemNotifier);
+                ? new WindowsFontInstaller(systemNotifier, InstallationScope.Machine)
+                : new WindowsFontInstaller(systemNotifier, InstallationScope.User);
 
             FontManager fontManager = new FontManager(installer);
 
-            switch (command)
+            try
             {
-                case "install":
-                    if (!remainingArgs.Any())
-                    {
-                        Console.WriteLine("Please provide at least one file or directory path for installation.");
+                switch (command)
+                {
+                    case "install":
+                        if (!remainingArgs.Any())
+                        {
+                            Console.WriteLine("Please provide at least one file or directory path for installation.");
+                            PrintUsage();
+                            return 1;
+                        }
+
+                        fontManager.InstallFonts(remainingArgs.ToArray());
+
+                        break;
+                    case "uninstall":
+                        if (!remainingArgs.Any())
+                        {
+                            Console.WriteLine("Please provide at least one font name for uninstallation.");
+                            PrintUsage();
+                            return 1;
+                        }
+
+                        fontManager.UninstallFonts(remainingArgs.ToArray());
+                        break;
+                    default:
+                        Console.WriteLine("Invalid command. Use install or uninstall.");
                         PrintUsage();
                         return 1;
-                    }
-
-                    fontManager.InstallFonts(remainingArgs.ToArray());
-                    if (restartFontCache)
-                    {
-                        WinApi.RestartFontCacheService();
-                    }
-                    break;
-                case "uninstall":
-                    if (!remainingArgs.Any())
-                    {
-                        Console.WriteLine("Please provide at least one font name for uninstallation.");
-                        PrintUsage();
-                        return 1;
-                    }
-
-                    fontManager.UninstallFonts(remainingArgs.ToArray());
-                    if (restartFontCache)
-                    {
-                        WinApi.RestartFontCacheService();
-                    }
-                    break;
-                default:
-                    Console.WriteLine("Invalid command. Use install or uninstall.");
-                    PrintUsage();
-                    return 1;
+                }
             }
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            Console.WriteLine(ex.Message);
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                if (restartFontCache)
+                {
+                    WinApi.RestartAndClearFontCacheService();
+                    Console.WriteLine("Windows Font Cache service restarted.");
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -142,7 +156,9 @@ public class Program
         Console.WriteLine("  --user, -u        : Install for current user only (default)");
         Console.WriteLine("  --machine, -m     : Install for all users (requires admin rights)");
         Console.WriteLine("  --all-users       : Same as --machine");
-        Console.WriteLine("  --restart-font-cache, --clear-cache");
+        Console.WriteLine("  --clear-cache, --restart-font-cache");
         Console.WriteLine("                    : Restart the Windows Font Cache service after operation");
+        Console.WriteLine("                      refreshing font list and removing cached uninstalled fonts.");
+        Console.WriteLine("                      This command physically deletes %LOCALAPPDATA%\\**\\FontCache directories");
     }
 }

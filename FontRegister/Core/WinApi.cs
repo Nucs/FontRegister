@@ -3,6 +3,7 @@ using System.Security.Principal;
 using System.Diagnostics;
 
 namespace FontRegister;
+
 /// <summary>
 /// Provides access to Windows API functions for font management and system notifications.
 /// </summary>
@@ -12,7 +13,7 @@ internal static class WinApi
     /// Restarts the Windows Font Cache Service using command line
     /// </summary>
     /// <returns>True if service was successfully restarted, false otherwise</returns>
-    public static bool RestartFontCacheService()
+    public static bool RestartAndClearFontCacheService()
     {
         try
         {
@@ -30,6 +31,87 @@ internal static class WinApi
             };
             stopProcess.Start();
             stopProcess.WaitForExit(30000); // 30 second timeout
+
+            foreach (var cache in FontConsts.GetFontCacheDirectories())
+            {
+                int deletionAttempts = 0;
+                while (true)
+                {
+                    deletionAttempts++;
+                    try
+                    {
+                        if (Directory.Exists(cache))
+                        {
+                            Directory.Delete(cache, true);
+                        }
+
+                        break;
+                    }
+                    catch (Exception)
+                    {
+                        Thread.Sleep(100);
+                        if (deletionAttempts > 3)
+                        {
+                            Console.WriteLine($"Failed to delete font cache directory {cache} entirely, but most of the cache are deleted. Some application is locking some of the files.");
+                            break;
+                        }
+                    }
+                }
+            }
+
+            {
+                var cache = Path.Combine(FontConsts.GetLocalFontDirectory(), "Deleted");
+                int deletionAttempts = 0;
+                while (true)
+                {
+                    deletionAttempts++;
+                    try
+                    {
+                        if (Directory.Exists(cache))
+                        {
+                            Directory.Delete(cache, true);
+                        }
+
+                        break;
+                    }
+                    catch (Exception)
+                    {
+                        Thread.Sleep(100);
+                        if (deletionAttempts > 3)
+                        {
+                            Console.WriteLine($"Failed to delete font cache directory {cache}");
+                            break;
+                        }
+                    }
+                }
+            }
+
+            {
+                var cache = Path.Combine(FontConsts.GetMachineFontDirectory(), "Deleted");
+                int deletionAttempts = 0;
+                while (true)
+                {
+                    deletionAttempts++;
+                    try
+                    {
+                        if (Directory.Exists(cache))
+                        {
+                            Directory.Delete(cache, true);
+                        }
+
+                        break;
+                    }
+                    catch (Exception)
+                    {
+                        Thread.Sleep(100);
+                        if (deletionAttempts > 3)
+                        {
+                            Console.WriteLine($"Failed to delete font cache directory {cache}");
+                            break;
+                        }
+                    }
+                }
+            }
 
             // Start the service
             var startProcess = new Process
@@ -53,6 +135,7 @@ internal static class WinApi
             return false;
         }
     }
+
     [DllImport("gdi32.dll", CharSet = CharSet.Unicode, EntryPoint = "AddFontResourceW")]
     public static extern int AddFontResource(string lpszFilename);
 
@@ -76,8 +159,8 @@ internal static class WinApi
 
     [DllImport("shell32.dll")]
     public static extern int SHChangeNotify(int eventId, uint flags, IntPtr item1, IntPtr item2);
-    
-    
+
+
     /// <summary>
     /// Checks if the current process has administrator privileges.
     /// </summary>

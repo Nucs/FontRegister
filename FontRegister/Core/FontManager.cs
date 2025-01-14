@@ -40,12 +40,12 @@ public class FontManager
 
                 foreach (string fontFile in fontFiles)
                 {
-                    _fontInstaller.InstallFont(fontFile);
+                    _fontInstaller.InstallFont(fontFile, false /*TODO: use args*/);
                 }
             }
             else if (File.Exists(path))
             {
-                _fontInstaller.InstallFont(path);
+                _fontInstaller.InstallFont(path, false /*TODO: use args*/);
             }
             else
             {

@@ -1,14 +1,16 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using Polly;
 
 namespace FontRegister.UnitTests
 {
     [TestFixture]
-    [NonParallelizable]
+    [Order(0)]
+    [Parallelizable(ParallelScope.None)]
     public class WindowsUserFontInstallerTests
     {
-        private WindowsUserFontInstaller _installer;
+        private WindowsFontInstaller _installer;
         private string _tempFontDirectory;
 
         [SetUp]
@@ -16,24 +18,22 @@ namespace FontRegister.UnitTests
         {
             _tempFontDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_tempFontDirectory);
-            _installer = new WindowsUserFontInstaller(new WindowsSystemNotifier());
+            _installer = new WindowsFontInstaller(new WindowsSystemNotifier(), InstallationScope.User);
             Console.SetOut(new StringWriter()); // Reset console output
         }
 
         [TearDown]
         public void TearDown()
         {
-            try
-            {
-                if (Directory.Exists(_tempFontDirectory))
+            Policy.Handle<Exception>()
+                .WaitAndRetry(10, _ => TimeSpan.FromMilliseconds(100))
+                .Execute(() =>
                 {
-                    Directory.Delete(_tempFontDirectory, true);
-                }
-            }
-            catch (IOException)
-            {
-                Console.WriteLine($"Warning: Unable to delete temporary directory {_tempFontDirectory}");
-            }
+                    if (Directory.Exists(_tempFontDirectory))
+                    {
+                        Directory.Delete(_tempFontDirectory, true);
+                    }
+                });
         }
 
         [TestCase(@"C:\Windows\Fonts\somefont.ttf", TestName = "Absolute path")]
@@ -52,12 +52,12 @@ namespace FontRegister.UnitTests
 
             var consoleOutput = new StringWriter();
             Console.SetOut(consoleOutput);
-            
+
             // Act
             var result = _installer.UninstallFont(normalizedName);
 
             // Assert
-            Assert.That(result, Is.False, "Should return false for non-existent font");
+            Assert.That(result.UninstalledSuccessfully, Is.False, "Should return false for non-existent font");
             Assert.That(consoleOutput.ToString(), Does.Contain("Error uninstalling font").Or.Contains("Font not found"), "Expected console output not found");
         }
 
@@ -72,10 +72,10 @@ namespace FontRegister.UnitTests
             Console.SetOut(consoleOutput);
 
             // Act
-            var result = _installer.InstallFont(invalidPath);
+            var result = _installer.InstallFont(invalidPath, false);
 
             // Assert
-            Assert.That(result, Is.False);
+            Assert.That(result.InstalledSuccessfully, Is.False);
             Assert.That(consoleOutput.ToString(), Does.Contain("Font file path not found"), "Expected console output not found");
         }
 
@@ -89,58 +89,65 @@ namespace FontRegister.UnitTests
             var result = _installer.UninstallFont(invalidPath);
 
             // Assert
-            Assert.That(result, Is.False);
+            Assert.That(result.UninstalledSuccessfully, Is.False);
         }
 
         [Test]
         public void UninstallFont_WithPathOutsideFontDirectory_ReturnsFalse()
         {
             // Arrange
-            var outsidePath = Path.Combine(_tempFontDirectory, "test.ttf");
+            var outsidePath = Path.Combine(_tempFontDirectory, "randomname.ttf");
             File.WriteAllText(outsidePath, "dummy content");
 
             // Act
             var result = _installer.UninstallFont(outsidePath);
 
             // Assert
-            Assert.That(result, Is.False);
+            Assert.That(result.UninstalledSuccessfully, Is.False);
         }
 
         [Test]
         public void InstallFont_WithUnsupportedExtension_ReturnsFalse()
         {
             // Arrange
-            var unsupportedPath = Path.Combine(_tempFontDirectory, "test.xyz");
+            var unsupportedPath = Path.Combine(_tempFontDirectory, "randomname.xyz");
             File.WriteAllText(unsupportedPath, "dummy content");
 
             // Act
-            var result = _installer.InstallFont(unsupportedPath);
+            var result = _installer.InstallFont(unsupportedPath, false);
 
             // Assert
-            Assert.That(result, Is.False);
+            Assert.That(result.InstalledSuccessfully, Is.False);
         }
 
         [Test]
         public void InstallFont_WithRelativePath_HandlesPathCorrectly()
         {
             // Arrange
-            var fontPath = Path.Combine(_tempFontDirectory, "test.ttf");
+            var fontPath = Path.Combine(_tempFontDirectory, "randomname.ttf");
             File.WriteAllText(fontPath, "dummy content");
             var relativePath = Path.GetFileName(fontPath);
+            var currentDirectory = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(_tempFontDirectory);
+            try
+            {
+                // Act
+                var result = _installer.InstallFont(relativePath, false);
 
-            // Act
-            var result = _installer.InstallFont(relativePath);
-
-            // Assert
-            Assert.That(result, Is.False); // False because it's not a valid font file
+                // Assert
+                Assert.That(result.InstalledSuccessfully, Is.False); // False because it's not a valid font file
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(currentDirectory);
+            }
         }
 
         [Test]
         public void UninstallFont_WithNullSystemNotifier_DoesNotThrow()
         {
             // Arrange
-            var fontPath = Path.Combine(_tempFontDirectory, "test.ttf");
+            var fontPath = Path.Combine(_tempFontDirectory, "randomname.ttf");
 
             // Act & Assert
             Assert.DoesNotThrow(() => _installer.UninstallFont(fontPath));

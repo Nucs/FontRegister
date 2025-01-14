@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using FontRegister.Abstraction;
 using NUnit.Framework;
+using Polly;
 
 namespace FontRegister.UnitTests
 {
@@ -23,28 +24,28 @@ namespace FontRegister.UnitTests
         [SetUp]
         public void Setup()
         {
-            _tempFontDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + Guid.NewGuid().ToString("N"));
+            var testName = TestContext.CurrentContext.Test.FullName;
+            testName = string.Join("", testName.Split(Path.GetInvalidFileNameChars())).Replace(".","_").Replace(",","_");
+            _tempFontDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + testName + "_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_tempFontDirectory);
-            
+
             _systemNotifier = new WindowsSystemNotifier();
-            _fontInstaller = _machineWide ? new WindowsMachineFontInstaller(_systemNotifier) : new WindowsUserFontInstaller(_systemNotifier);
+            _fontInstaller = _machineWide ? new WindowsFontInstaller(_systemNotifier, InstallationScope.Machine) : new WindowsFontInstaller(_systemNotifier, InstallationScope.User);
             _fontManager = new FontManager(_fontInstaller);
         }
 
         [TearDown]
         public void TearDown()
         {
-            try
-            {
-                if (Directory.Exists(_tempFontDirectory))
+            Policy.Handle<Exception>()
+                .WaitAndRetry(10, _ => TimeSpan.FromMilliseconds(100))
+                .Execute(() =>
                 {
-                    Directory.Delete(_tempFontDirectory, true);
-                }
-            }
-            catch (IOException)
-            {
-                Console.WriteLine($"Warning: Unable to delete temporary directory {_tempFontDirectory}");
-            }
+                    if (Directory.Exists(_tempFontDirectory))
+                    {
+                        Directory.Delete(_tempFontDirectory, true);
+                    }
+                });
         }
 
         [Test]
@@ -121,8 +122,8 @@ namespace FontRegister.UnitTests
             // Arrange
             var directory = Path.Combine(_tempFontDirectory, "mixed");
             Directory.CreateDirectory(directory);
-            File.WriteAllText(Path.Combine(directory, "test.txt"), "dummy content");
-            File.WriteAllText(Path.Combine(directory, "test.doc"), "dummy content");
+            File.WriteAllText(Path.Combine(directory, "randomname.txt"), "dummy content");
+            File.WriteAllText(Path.Combine(directory, "randomname.doc"), "dummy content");
 
             // Act & Assert
             Assert.DoesNotThrow(() => _fontManager.InstallFonts(new[] { directory }));
@@ -146,8 +147,8 @@ namespace FontRegister.UnitTests
             var subDir = Path.Combine(rootDir, "sub");
             Directory.CreateDirectory(rootDir);
             Directory.CreateDirectory(subDir);
-            File.WriteAllText(Path.Combine(rootDir, "test1.ttf"), "dummy content");
-            File.WriteAllText(Path.Combine(subDir, "test2.ttf"), "dummy content");
+            File.WriteAllText(Path.Combine(rootDir, "randomname1.ttf"), "dummy content");
+            File.WriteAllText(Path.Combine(subDir, "randomname2.ttf"), "dummy content");
 
             // Act & Assert
             Assert.DoesNotThrow(() => _fontManager.InstallFonts(new[] { rootDir }));

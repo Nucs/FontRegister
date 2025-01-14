@@ -12,12 +12,6 @@ using Polly;
 
 namespace FontRegister.UnitTests
 {
-    public enum InstallationScope
-    {
-        User,
-        Machine
-    }
-
     [TestFixture("Historic.otf", InstallationScope.User)]
     [TestFixture("Mang Kenapa.otf", InstallationScope.User)]
     [TestFixture("Mang Kenapa.ttf", InstallationScope.User)]
@@ -35,10 +29,10 @@ namespace FontRegister.UnitTests
     public class IntegrationTests
     {
         private readonly InstallationScope _scope;
-        private const string TEST_FONT_PATTERN = @"TestFont_\w+";
+        private const string TEST_FONT_PATTERN = @"TestFont_@_?\w+";
 
-        private Random _random = new Random();
-        private string _tempFontDirectory;
+        private readonly Random _random = new Random();
+        private string _tempDirectory;
         private string _fontDirectory;
 
         public string FileName { get; set; }
@@ -57,9 +51,11 @@ namespace FontRegister.UnitTests
         [SetUp]
         public void Setup()
         {
-            _tempFontDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(_tempFontDirectory);
-            while (!Directory.Exists(_tempFontDirectory))
+            var testName = TestContext.CurrentContext.Test.FullName;
+            testName = string.Join("", testName.Split(Path.GetInvalidFileNameChars())).Replace(".","_").Replace(",","_");
+            _tempDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + testName + "_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(_tempDirectory);
+            while (!Directory.Exists(_tempDirectory))
             {
                 Thread.Sleep(10);
             }
@@ -67,10 +63,7 @@ namespace FontRegister.UnitTests
             _fontDirectory = _scope == InstallationScope.User ? FontConsts.GetLocalFontDirectory() : FontConsts.GetMachineFontDirectory();
 
             // Create multiple test fonts
-            for (int i = 0; i < 5; i++)
-            {
-                CreateTestFont();
-            }
+            CreateTestFont();
         }
 
         [TearDown]
@@ -78,24 +71,31 @@ namespace FontRegister.UnitTests
         {
             Console.WriteLine("Test Completed");
             Console.WriteLine("---");
-            CleanupTestFonts();
-            try
+            var testName = TestContext.CurrentContext.Test.FullName;
+            testName = string.Join("", testName.Split(Path.GetInvalidFileNameChars())).Replace(".","_").Replace(",","_");
+            CleanupTestFonts(testName);
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            /*try
             {
-                Directory.Delete(_tempFontDirectory, true);
+                Directory.Delete(_tempDirectory, true);
             }
             catch (IOException)
             {
-                Console.WriteLine($"Warning: Unable to delete temporary directory {_tempFontDirectory}. It may need manual cleanup.");
+                Console.WriteLine($"Warning: Unable to delete temporary directory {_tempDirectory}. It may need manual cleanup.");
             }
             catch (UnauthorizedAccessException)
             {
-                Console.WriteLine($"Warning: Unable to delete temporary directory {_tempFontDirectory}. It may need manual cleanup.");
-            }
+                Console.WriteLine($"Warning: Unable to delete temporary directory {_tempDirectory}. It may need manual cleanup.");
+            }*/
         }
 
-        private void CleanupTestFonts()
+        private void CleanupTestFonts(string testName)
         {
-            var regex = new Regex(TEST_FONT_PATTERN, RegexOptions.IgnoreCase);
+            var regex = new Regex(TEST_FONT_PATTERN.Replace("@", testName), RegexOptions.IgnoreCase);
 
             // Clean up font files from font directory based on scope
             foreach (var file in Directory.GetFiles(_fontDirectory, "*.*"))
@@ -103,30 +103,6 @@ namespace FontRegister.UnitTests
                 if (regex.IsMatch(Path.GetFileNameWithoutExtension(file)))
                 {
                     TryDeleteFile(file);
-                }
-            }
-
-            // Clean up from registry based on scope
-            using (var fontsKey = _scope == InstallationScope.Machine 
-                ? Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey, true)
-                : Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey, true))
-            {
-                if (fontsKey != null)
-                {
-                    foreach (var fontName in fontsKey.GetValueNames())
-                    {
-                        if (regex.IsMatch(fontName))
-                        {
-                            try
-                            {
-                                fontsKey.DeleteValue(fontName, false);
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Failed to remove font from registry {fontName}: {ex.Message}");
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -137,11 +113,11 @@ namespace FontRegister.UnitTests
             {
                 if (_scope == InstallationScope.Machine)
                 {
-                    new WindowsMachineFontInstaller().UninstallFont(filePath);
+                    new WindowsFontInstaller(InstallationScope.Machine).UninstallFont(filePath);
                 }
                 else
                 {
-                    new WindowsUserFontInstaller().UninstallFont(filePath);
+                    new WindowsFontInstaller(InstallationScope.User).UninstallFont(filePath);
                 }
             }
             catch (Exception e)
@@ -279,10 +255,67 @@ namespace FontRegister.UnitTests
             // Note: You might want to capture console output to verify usage information is printed
         }
 
+
+        [Test]
+        [Retry(3)]
+        public void CommandLine_UninstallDoesntDeleteExternalFont()
+        {
+            // Arrange
+            string randomFontPath = GetRandomTestFontPath();
+            string fontName = Path.GetFileNameWithoutExtension(randomFontPath);
+
+            // Install first
+            FontRegister.Program.Main(new[] { "install", randomFontPath });
+
+            // Act
+            var firstResult = FontRegister.Program.Main(new[] { "uninstall", randomFontPath });
+
+            // Assert
+            Assert.That(firstResult, Is.EqualTo(0), "First uninstallation should succeed");
+            Assert.That(File.Exists(randomFontPath), Is.True, "First uninstallation should succeed");
+            Assert.That(IsFontInstalled(fontName, true), Is.False, "Font should remain uninstalled");
+        }
+
+        [Test]
+        [Retry(3)]
+        public void CommandLine_UninstallDoesntDeleteExternalFont_RelativePath()
+        {
+            // Arrange
+            string randomFontPath = GetRandomTestFontPath();
+            string fontName = Path.GetFileNameWithoutExtension(randomFontPath);
+            var currentDirectory = Environment.CurrentDirectory;
+            try
+            {
+                var subOfRandomPath = Path.GetFullPath(Path.Combine(randomFontPath, "../../../"));
+                var relativePath = Path.GetRelativePath(subOfRandomPath, randomFontPath);
+                Environment.CurrentDirectory = subOfRandomPath;
+
+                Assert.That(File.Exists(relativePath), Is.True, "First uninstallation should succeed");
+
+                // Install first
+                FontRegister.Program.Main(new[] { "install", relativePath });
+
+                // Act
+                var firstResult = FontRegister.Program.Main(new[] { "uninstall", relativePath });
+
+                // Assert
+                Assert.That(firstResult, Is.EqualTo(0), "First uninstallation should succeed");
+                Assert.That(File.Exists(relativePath), Is.True, "First uninstallation should succeed");
+                Assert.That(IsFontInstalled(fontName, true), Is.False, "Font should remain uninstalled");
+            }
+            finally
+            {
+                Environment.CurrentDirectory = currentDirectory;
+            }
+        }
+
         private string CreateTestFont()
         {
-            string fontName = $"TestFont_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
-            string fontPath = Path.Combine(_tempFontDirectory, $"{fontName}{Path.GetExtension(FileName)}");
+            var testName = TestContext.CurrentContext.Test.FullName;
+            testName = string.Join("", testName.Split(Path.GetInvalidFileNameChars())).Replace(".","_").Replace(",","_");
+
+            string fontName = $"TestFont_{testName}_{Guid.NewGuid().ToString("N").Substring(0, 16)}";
+            string fontPath = Path.Combine(_tempDirectory, $"{fontName}{Path.GetExtension(FileName)}");
 
             // Create a minimal OTF file
             byte[] fontFile = EmbeddedResourceHelper.ReadEmbeddedResource(FileName);
@@ -294,7 +327,7 @@ namespace FontRegister.UnitTests
 
         private string GetRandomTestFontPath()
         {
-            var testFonts = Directory.GetFiles(_tempFontDirectory, "*" + Path.GetExtension(FileName));
+            var testFonts = Directory.GetFiles(_tempDirectory, "*" + Path.GetExtension(FileName));
 
             if (testFonts.Length == 0)
             {
