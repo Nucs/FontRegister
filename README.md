@@ -35,6 +35,7 @@ fontregister install "c:/folder" "c:/font.ttf" "./relativedir/font.otf"
 
 # 2. Specify Installation Scope
 # For current user (default)
+fontregister install "c:/folder" "c:/font.ttf"
 fontregister install --user "c:/folder" "c:/font.ttf"
 fontregister install -u "c:/folder" "c:/font.ttf"
 
