@@ -6,10 +6,10 @@
 FontRegister is both a command-line tool and a csharp native library (pure code) for installing and uninstalling fonts on Windows.
 
 ## Key Features
-- Ability to install fonts in bulk.
+- Ability to install/uninstall fonts in bulk.
 - Notify Windows OS about new fonts refreshing the font-lists on other apps immediately (photoshop, word and so on).
 - Written in pure C# and Pinvoke.
-- Code install/uninstall API via Nuget supporting .NET 4.8 and .NET 6.0.
+- Code install/uninstall API via Nuget supporting .NET 4.8 and .NET 6.0/8.0.
 
 ## Supported Font Types
 
@@ -39,7 +39,7 @@ fontregister install "c:/folder" "c:/font.ttf" "./relativedir/font.otf"
 fontregister install --user "c:/folder" "c:/font.ttf"
 fontregister install -u "c:/folder" "c:/font.ttf"
 
-# For all users (requires admin rights)
+# For all users / machine-wide
 fontregister install --machine "c:/folder" "c:/font.ttf"
 fontregister install -m "c:/folder" "c:/font.ttf"
 fontregister install --all-users "c:/folder" "c:/font.ttf"
@@ -57,9 +57,16 @@ fontregister uninstall "calibril.ttf"
 # By full path
 fontregister uninstall "C:/Windows/Fonts/calibril.ttf"
 
+# By your installation path
+fontregister uninstall "C:/folder/calibril.ttf"
+
 # 3. Uninstall with Scope
 fontregister uninstall -m "fontname"  # Machine-wide
 fontregister uninstall -u "fontname"  # User scope
+
+# UTILITIES EXAMPLES:
+fontregister list  # List all installed fonts
+fontregister help  # Display help
 ```
 
 ## Help
@@ -73,8 +80,13 @@ Commands:
   uninstall <fontName1> [fontName2] [fontName3] ... : Uninstall specified fonts
 Options:
   --user, -u        : Install for current user only (default)
-  --machine, -m     : Install for all users
+  --machine, -m     : Install for all users (requires admin rights)
   --all-users       : Same as --machine
+  --clear-cache, --restart-font-cache
+                    : Restart the Windows Font Cache service after operation
+                      refreshing font list and removing cached uninstalled fonts.
+                      This command physically deletes %LOCALAPPDATA%\**\FontCache directories
+
 Note: All font operations require administrator rights
 ```
 
