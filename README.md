@@ -44,11 +44,6 @@ fontregister install --machine "c:/folder" "c:/font.ttf"
 fontregister install -m "c:/folder" "c:/font.ttf"
 fontregister install --all-users "c:/folder" "c:/font.ttf"
 
-# 3. External Font Installation
-# Registers fonts without copying them (keeps original location)
-fontregister install --external "c:/folder/myfont.ttf"
-fontregister install --external "c:/fonts-folder"
-
 # UNINSTALLATION EXAMPLES:
 
 # 1. Basic Uninstallation
@@ -80,8 +75,6 @@ Options:
   --user, -u        : Install for current user only (default)
   --machine, -m     : Install for all users
   --all-users       : Same as --machine
-  --external        : Install fonts by referencing their original location
-                      instead of copying them to the Windows Fonts directory
 Note: All font operations require administrator rights
 ```
 
@@ -98,10 +91,7 @@ PM> Install-Package FontRegister
 var notifier = new WindowsSystemNotifier(); //pass null to not notify other apps
 var userInstaller = new WindowsUserFontInstaller(notifier);
 var fontManager = new FontManager(userInstaller);
-// Install by copying to Windows Fonts directory (default)
-fontManager.InstallFonts(new[] { "C:/myfonts/myfont.ttf" }, false);
-// Install by referencing original location
-fontManager.InstallFonts(new[] { "C:/myfonts/myfont.ttf" }, true);
+fontManager.InstallFonts(new[] { "C:/myfonts/myfont.ttf" });
 
 //in bulk for all users
 var machineInstaller = new WindowsMachineFontInstaller(notifier);

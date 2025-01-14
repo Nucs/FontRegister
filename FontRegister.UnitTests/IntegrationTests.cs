@@ -256,55 +256,6 @@ namespace FontRegister.UnitTests
         }
 
 
-        [Test]
-        [Retry(3)]
-        public void CommandLine_InstallAsExternal_ShouldKeepOriginalFile()
-        {
-            // Arrange
-            string randomFontPath = GetRandomTestFontPath();
-            var args = new[] { "install", "--external" }
-                .Concat(GetScopeArgs())
-                .Concat(new[] { randomFontPath })
-                .ToArray();
-
-            // Act
-            var result = FontRegister.Program.Main(args);
-
-            // Assert
-            Assert.That(result, Is.EqualTo(0));
-            Assert.That(File.Exists(randomFontPath), Is.True, "Original font file should still exist");
-            Assert.That(IsFontInstalled(Path.GetFileNameWithoutExtension(randomFontPath)), Is.True, "Font should be installed");
-
-            // Verify registry points to original location
-            var id = new WindowsFontInstaller(_scope).GetIdentification(randomFontPath);
-            Assert.That(id, Is.Not.Null, "Font should be installed");
-        }
-
-        [Test]
-        [Retry(3)]
-        public void CommandLine_InstallAsExternal_ShouldNotCopyToFontDirectory()
-        {
-            // Arrange
-            string randomFontPath = GetRandomTestFontPath();
-            string fontName = Path.GetFileName(randomFontPath);
-            string destinationPath = Path.Combine(_fontDirectory, fontName);
-            var args = new[] { "install", "--external" }
-                .Concat(GetScopeArgs())
-                .Concat(new[] { randomFontPath })
-                .ToArray();
-
-            // Act
-            var result = FontRegister.Program.Main(args);
-
-            // Assert
-            Assert.That(result, Is.EqualTo(0));
-            Assert.That(File.Exists(destinationPath), Is.False, "Font should not be copied to font directory");
-            Assert.That(IsFontInstalled(Path.GetFileNameWithoutExtension(randomFontPath)), Is.True, "Font should be installed");
-
-            // Verify registry points to original location
-            var id = new WindowsFontInstaller(_scope).GetIdentification(randomFontPath);
-            Assert.That(id, Is.Not.Null, "Font should be installed");
-        }
 
         [Test]
         [Retry(3)]
