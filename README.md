@@ -74,7 +74,7 @@ fontregister --clear-cache  # Clear font cache
 Here's the output of the help command:
 
 ```sh
-Usage: FontManager <command> [options] [paths...]
+Usage: FontManager <command> [options] [paths...] 
 Commands:
   install <path1> [path2] [path3] ... : Install fonts from specified files or directories
   uninstall <fontName1> [fontName2] [fontName3] ... : Uninstall specified fonts
