@@ -21,6 +21,27 @@ The following font file extensions are supported:
 ".fnt"  // Windows Font
 ```
 
+## Commandline
+
+Here's the output of the help command:
+
+```sh
+Usage: FontManager <command> [options] [paths...] 
+Commands:
+  install <path1> [path2] [path3] ... : Install fonts from specified files or directories
+  uninstall <fontName1> [fontName2] [fontName3] ... : Uninstall specified fonts
+Options:
+  --user, -u        : Install for current user only (default)
+  --machine, -m     : Install for all users (requires admin rights)
+  --all-users       : Same as --machine
+  --clear-cache, --restart-font-cache
+                    : Restart the Windows Font Cache service after operation
+                      refreshing font list and removing cached uninstalled fonts.
+                      This command physically deletes %LOCALAPPDATA%\**\FontCache directories
+
+Note: All font operations require administrator rights
+```
+
 ## Usage
 
 ```sh
@@ -67,27 +88,6 @@ fontregister uninstall -u "fontname"  # User scope
 
 fontregister  # Display help
 fontregister --clear-cache  # Clear font cache
-```
-
-## Help
-
-Here's the output of the help command:
-
-```sh
-Usage: FontManager <command> [options] [paths...] 
-Commands:
-  install <path1> [path2] [path3] ... : Install fonts from specified files or directories
-  uninstall <fontName1> [fontName2] [fontName3] ... : Uninstall specified fonts
-Options:
-  --user, -u        : Install for current user only (default)
-  --machine, -m     : Install for all users (requires admin rights)
-  --all-users       : Same as --machine
-  --clear-cache, --restart-font-cache
-                    : Restart the Windows Font Cache service after operation
-                      refreshing font list and removing cached uninstalled fonts.
-                      This command physically deletes %LOCALAPPDATA%\**\FontCache directories
-
-Note: All font operations require administrator rights
 ```
 
 ## FontRegister Library Code Example
