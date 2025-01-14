@@ -17,9 +17,7 @@ namespace FontRegister.UnitTests
         [SetUp]
         public void Setup()
         {
-            var testName = TestContext.CurrentContext.Test.FullName;
-            testName = string.Join("", testName.Split(Path.GetInvalidFileNameChars())).Replace(".","_").Replace(",","_");
-            _tempFontDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + testName + Guid.NewGuid().ToString("N"));
+            _tempFontDirectory = TestConsts.GetTestPath();
             Directory.CreateDirectory(_tempFontDirectory);
             _installer = new WindowsFontInstaller(new WindowsSystemNotifier(), InstallationScope.Machine);
             Console.SetOut(new StringWriter()); // Reset console output
@@ -75,7 +73,7 @@ namespace FontRegister.UnitTests
             Console.SetOut(consoleOutput);
 
             // Act
-            var result = _installer.InstallFont(invalidPath, false);
+            var result = _installer.InstallFont(invalidPath);
 
             // Assert
             Assert.That(result.InstalledSuccessfully, Is.False);
@@ -117,7 +115,7 @@ namespace FontRegister.UnitTests
             File.WriteAllText(unsupportedPath, "dummy content");
 
             // Act
-            var result = _installer.InstallFont(unsupportedPath, false);
+            var result = _installer.InstallFont(unsupportedPath);
 
             // Assert
             Assert.That(result.InstalledSuccessfully, Is.False);
@@ -135,7 +133,7 @@ namespace FontRegister.UnitTests
             try
             {
                 // Act
-                var result = _installer.InstallFont(relativePath, false);
+                var result = _installer.InstallFont(relativePath);
 
                 // Assert
                 Assert.That(result.InstalledSuccessfully, Is.False); // False because it's not a valid font file
