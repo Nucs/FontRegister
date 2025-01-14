@@ -33,6 +33,7 @@ public class Program
             // Default to user scope
             bool? useMachineWide = null;
             bool restartFontCache = false;
+            bool installAsExternalFontPath = false;
             var remainingArgs = new List<string>();
 
             // Parse scope flags and collect remaining arguments
@@ -71,6 +72,9 @@ public class Program
                     case "--clear-cache":
                         restartFontCache = true;
                         break;
+                    case "--external":
+                        installAsExternalFontPath = true;
+                        break;
                     default:
                         remainingArgs.Add(args[i]);
                         break;
@@ -106,7 +110,7 @@ public class Program
                             return 1;
                         }
 
-                        fontManager.InstallFonts(remainingArgs.ToArray());
+                        fontManager.InstallFonts(remainingArgs.ToArray(), installAsExternalFontPath);
 
                         break;
                     case "uninstall":
@@ -160,5 +164,7 @@ public class Program
         Console.WriteLine("                    : Restart the Windows Font Cache service after operation");
         Console.WriteLine("                      refreshing font list and removing cached uninstalled fonts.");
         Console.WriteLine("                      This command physically deletes %LOCALAPPDATA%\\**\\FontCache directories");
+        Console.WriteLine("  --external        : Install fonts by referencing their original location");
+        Console.WriteLine("                      instead of copying them to the Windows Fonts directory");
     }
 }

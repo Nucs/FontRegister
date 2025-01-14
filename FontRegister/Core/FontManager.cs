@@ -25,7 +25,7 @@ public class FontManager
     /// For directory paths, all supported font files (.ttf, .otf, .fon, .ttc) will be installed.
     /// Invalid paths will be skipped with a warning message.
     /// </remarks>
-    public void InstallFonts(string[] paths)
+    public void InstallFonts(string[] paths, bool installAsExternalFontPath)
     {
         foreach (string path in paths.Select(Path.GetFullPath))
         {
@@ -40,12 +40,12 @@ public class FontManager
 
                 foreach (string fontFile in fontFiles)
                 {
-                    _fontInstaller.InstallFont(fontFile, false /*TODO: use args*/);
+                    _fontInstaller.InstallFont(fontFile, installAsExternalFontPath);
                 }
             }
             else if (File.Exists(path))
             {
-                _fontInstaller.InstallFont(path, false /*TODO: use args*/);
+                _fontInstaller.InstallFont(path, installAsExternalFontPath);
             }
             else
             {
