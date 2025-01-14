@@ -56,6 +56,8 @@ public class FinalizationTests
                 }
             }
         }
+        
+        //AI! this code from here on must run all in parallel with new task for every operation
 
         // Clean up font files from font directories
         foreach (var file in Directory.GetFiles(FontConsts.GetLocalFontDirectory(), "TestFont_*.*"))
@@ -83,58 +85,6 @@ public class FinalizationTests
                     }
                 });
         });
-    }
-
-
-    private void CleanupTestFonts(string testName)
-    {
-        var regex = new Regex(TEST_FONT_PATTERN.Replace("@", testName), RegexOptions.IgnoreCase);
-
-        // Clean up external fonts from registry
-        using (var userKey = Registry.CurrentUser.OpenSubKey(FontConsts.FontRegistryKey))
-        using (var machineKey = Registry.LocalMachine.OpenSubKey(FontConsts.FontRegistryKey))
-        {
-            if (userKey != null)
-            {
-                foreach (var fontName in userKey.GetValueNames())
-                {
-                    if (regex.IsMatch(fontName))
-                    {
-                        TryDeleteFile(fontName, InstallationScope.User);
-                    }
-                }
-            }
-
-            if (machineKey != null)
-            {
-                foreach (var fontName in machineKey.GetValueNames())
-                {
-                    if (regex.IsMatch(fontName))
-                    {
-                        TryDeleteFile(fontName, InstallationScope.Machine);
-                    }
-                }
-            }
-        }
-
-        // Clean up font files from font directory based on scope
-        foreach (var file in Directory.GetFiles(FontConsts.GetLocalFontDirectory(), "*.*"))
-        {
-            if (regex.IsMatch(Path.GetFileNameWithoutExtension(file)))
-            {
-                TryDeleteFile(file, InstallationScope.User);
-            }
-        }
-
-        foreach (var file in Directory.GetFiles(FontConsts.GetMachineFontDirectory(), "*.*"))
-        {
-            if (regex.IsMatch(Path.GetFileNameWithoutExtension(file)))
-            {
-                TryDeleteFile(file, InstallationScope.Machine);
-            }
-        }
-        
-        
     }
 
     private void TryDeleteFile(string filePath, InstallationScope scope)
