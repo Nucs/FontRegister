@@ -56,7 +56,6 @@ fontregister uninstall "Calibri (TrueType)" "Calibri Light"
 fontregister uninstall "calibril.ttf"
 # By full path
 fontregister uninstall "C:/Windows/Fonts/calibril.ttf"
-
 # By your installation path
 fontregister uninstall "C:/folder/calibril.ttf"
 
@@ -65,8 +64,9 @@ fontregister uninstall -m "fontname"  # Machine-wide
 fontregister uninstall -u "fontname"  # User scope
 
 # UTILITIES EXAMPLES:
-fontregister list  # List all installed fonts
-fontregister help  # Display help
+
+fontregister  # Display help
+fontregister --clear-cache  # Clear font cache
 ```
 
 ## Help
@@ -124,11 +124,6 @@ machineFontManager.UninstallFonts([
     "myfont.ttf",          // By filename
     "C:/myfonts/myfont.ttf" // By full path
 ]);
-
-// Example 4: Install without system notifications
-var silentInstaller = new WindowsFontInstaller(null, InstallationScope.User);
-var silentFontManager = new FontManager(silentInstaller);
-silentFontManager.InstallFonts(["C:/myfonts/myfont.ttf"]);
 ```
 
 ## Contributing

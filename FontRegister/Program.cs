@@ -160,5 +160,7 @@ public class Program
         Console.WriteLine("                    : Restart the Windows Font Cache service after operation");
         Console.WriteLine("                      refreshing font list and removing cached uninstalled fonts.");
         Console.WriteLine("                      This command physically deletes %LOCALAPPDATA%\\**\\FontCache directories");
+        Console.WriteLine();
+        Console.WriteLine("Note: All font operations require administrator rights\n");
     }
 }
