@@ -6,6 +6,7 @@ using Polly;
 
 namespace FontRegister.UnitTests
 {
+    //AI! all font files used here must be deleted afterwards via try-finally and they must have random string in them
     [TestFixture(true)]
     [TestFixture(false)]
     public class FontManagerTests
@@ -24,9 +25,7 @@ namespace FontRegister.UnitTests
         [SetUp]
         public void Setup()
         {
-            var testName = TestContext.CurrentContext.Test.FullName;
-            testName = string.Join("", testName.Split(Path.GetInvalidFileNameChars())).Replace(".","_").Replace(",","_");
-            _tempFontDirectory = Path.Combine(Path.GetTempPath(), "TestFonts_" + testName + "_" + Guid.NewGuid().ToString("N"));
+            _tempFontDirectory = TestConsts.GetTestPath();
             Directory.CreateDirectory(_tempFontDirectory);
 
             _systemNotifier = new WindowsSystemNotifier();
