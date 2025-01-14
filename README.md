@@ -49,6 +49,10 @@ fontregister uninstall -m "fontname1" "fontname2"
 fontregister uninstall "Calibri (TrueType)" "Calibri Light"
 fontregister uninstall "calibril.ttf"
 
+
+
+
+
 ```
 
 ## Help
