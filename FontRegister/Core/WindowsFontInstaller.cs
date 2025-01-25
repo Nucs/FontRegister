@@ -48,7 +48,7 @@ public class WindowsFontInstaller : IFontInstaller
     //C:\Program Files\WindowsApps\Microsoft.WindowsTerminal_1.21.3231.0_x64__8wekyb3d8bbwe\TestFont_15f8920e.otf
     //./TestFont_15f8920e
     //../Fonts/TestFont_15f8920e.otf
-    public (bool InstalledSuccessfully, FontIdentification? Identfication) InstallFont(string fontPath)
+    public (bool InstalledSuccessfully, FontIdentification? Identfication) InstallFont(string fontPath, bool updateFonts = false)
     {
         string? logName = null;
         FontIdentification? identifcation = null;
@@ -58,12 +58,15 @@ public class WindowsFontInstaller : IFontInstaller
             logName = Path.GetFileName(fontPath);
 
             identifcation = IdentifyFont(fontPath);
-            if (identifcation != null)
+            if (identifcation != null && updateFonts)
+            {
+                Console.WriteLine($"{Path.GetFileName(identifcation.FontPath)}: Font already installed, updating...");
+            }
+            else if (identifcation != null)
             {
                 Console.WriteLine($"{Path.GetFileName(identifcation.FontPath)}: Font already installed.");
                 return (false, identifcation);
             }
-
 
             if (!File.Exists(fontPath))
             {
@@ -91,10 +94,10 @@ public class WindowsFontInstaller : IFontInstaller
             fontName = char.ToUpper(fontName[0]) + fontName.Substring(1); //first letter capital
             identifcation.RegistryValueName = FontConsts.GetRegistryFontName(identifcation.FontExtension, fontName);
             identifcation.RegistryRawValue = Path.Combine(FontInstallationDirectory(), Path.GetFileName(identifcation.FontPath));
-            
+
             if (identifcation.FontPath.Length > 256)
                 throw new PathTooLongException($"{logName}: Font file path is too long.");
-            
+
             //copy the font file
             int copyAttempts = 0;
             while (true)
@@ -102,7 +105,7 @@ public class WindowsFontInstaller : IFontInstaller
                 try
                 {
                     copyAttempts++;
-                    if (!File.Exists(identifcation.RegistryRawValue))
+                    if (!File.Exists(identifcation.RegistryRawValue) || updateFonts)
                         File.Copy(identifcation.FontPath, identifcation.RegistryRawValue, overwrite: true);
                     break;
                 }
@@ -128,7 +131,6 @@ public class WindowsFontInstaller : IFontInstaller
 
                 fontsKey.SetValue(identifcation.RegistryValueName, identifcation.RegistryRawValue);
             }
-
 
             Console.WriteLine($"{logName}: Font installed successfully.");
 

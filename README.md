@@ -34,6 +34,9 @@ Options:
   --user, -u        : Install for current user only (default)
   --machine, -m     : Install for all users (requires admin rights)
   --all-users       : Same as --machine
+  --update          : Forces update/reinstallation of fonts
+  --force           : Same as --update
+  --notify          : Will notify windows applications to reload fonts (always happens on install/uninstall)
   --clear-cache, --restart-font-cache
                     : Restart the Windows Font Cache service after operation
                       refreshing font list and removing cached uninstalled fonts.
@@ -65,6 +68,10 @@ fontregister install --machine "c:/folder" "c:/font.ttf"
 fontregister install -m "c:/folder" "c:/font.ttf"
 fontregister install --all-users "c:/folder" "c:/font.ttf"
 
+# Update existing fonts from given file/path
+fontregister install --update "c:/folder" "c:/font.ttf"
+fontregister install --force "c:/folder" "c:/font.ttf"
+
 # UNINSTALLATION EXAMPLES:
 
 # 1. Basic Uninstallation
@@ -88,6 +95,7 @@ fontregister uninstall -u "fontname"  # User scope
 
 fontregister  # Display help
 fontregister --clear-cache  # Clear font cache
+fontregister --notify  # notify Windows applications to refresh font list (always done after install/uninstall)
 ```
 
 ## FontRegister Library Code Example

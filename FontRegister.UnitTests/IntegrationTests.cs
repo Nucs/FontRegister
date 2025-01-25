@@ -73,23 +73,6 @@ namespace FontRegister.UnitTests
             CleanupTestFonts(testName);
         }
 
-        [OneTimeTearDown]
-        public void OneTimeTearDown()
-        {
-            /*try
-            {
-                Directory.Delete(_tempDirectory, true);
-            }
-            catch (IOException)
-            {
-                Console.WriteLine($"Warning: Unable to delete temporary directory {_tempDirectory}. It may need manual cleanup.");
-            }
-            catch (UnauthorizedAccessException)
-            {
-                Console.WriteLine($"Warning: Unable to delete temporary directory {_tempDirectory}. It may need manual cleanup.");
-            }*/
-        }
-
         private void CleanupTestFonts(string testName)
         {
             // Clean up font files from font directory based on scope
@@ -185,6 +168,28 @@ namespace FontRegister.UnitTests
 
         [Test]
         [Retry(3)]
+        public void CommandLine_InstallSameFontTwice_Update_ShouldReturnSuccess()
+        {
+            // Arrange
+            string randomFontPath = GetRandomTestFontPath();
+            var args = new[] { "install" }
+                .Concat(GetScopeArgs())
+                .Concat(new[] { "--update" })
+                .Concat(new[] { randomFontPath })
+                .ToArray();
+
+            // Act
+            var firstResult = FontRegister.Program.Main(args);
+            var secondResult = FontRegister.Program.Main(args);
+
+            // Assert
+            Assert.That(firstResult, Is.EqualTo(0), "First installation should succeed");
+            Assert.That(secondResult, Is.EqualTo(0), "Second installation should succeed but warn");
+            Assert.That(IsFontInstalled(Path.GetFileNameWithoutExtension(randomFontPath)), Is.True, "Font should remain installed");
+        }
+
+        [Test]
+        [Retry(3)]
         public void CommandLine_UninstallSameFontTwice_ShouldReturnSuccessAndWarn()
         {
             // Arrange
@@ -249,7 +254,6 @@ namespace FontRegister.UnitTests
             Assert.That(result, Is.EqualTo(1));
             // Note: You might want to capture console output to verify usage information is printed
         }
-
 
 
         [Test]

@@ -33,7 +33,9 @@ public class Program
             // Default to user scope
             bool? useMachineWide = null;
             bool restartFontCache = false;
-            var remainingArgs = new List<string>();
+            bool updateFonts = false;
+            bool notify = false;
+            var fontPaths = new List<string>();
 
             // Parse scope flags and collect remaining arguments
             for (int i = 0; i < args.Length; i++)
@@ -71,23 +73,44 @@ public class Program
                     case "--clear-cache":
                         restartFontCache = true;
                         break;
+                    case "--update":
+                    case "--force":
+                        updateFonts = true;
+                        break;
+                    case "--notify":
+                        notify = true;
+                        break;
                     default:
-                        remainingArgs.Add(args[i]);
+                        fontPaths.Add(args[i]);
                         break;
                 }
             }
 
             useMachineWide ??= false;
+            ISystemNotifier systemNotifier = new WindowsSystemNotifier();
 
-            if (remainingArgs.Count == 0 && restartFontCache)
+            if (fontPaths.Count == 0)
             {
-                WinApi.RestartAndClearFontCacheService();
-                Console.WriteLine("Windows Font Cache service restarted.");
-                return 0;
+                bool optionalCommandsTriggered = false;
+                if (restartFontCache)
+                {
+                    optionalCommandsTriggered = true;
+                    WinApi.RestartAndClearFontCacheService();
+                    Console.WriteLine("Windows Font Cache service restarted.");
+                }
+
+                if (notify)
+                {
+                    optionalCommandsTriggered = true;
+                    systemNotifier.NotifyFontChange();
+                    Console.WriteLine("Notified Windows applications to reload fonts.");
+                }
+
+                if (optionalCommandsTriggered)
+                    return 0;
             }
 
             // Create the appropriate installer based on scope
-            ISystemNotifier systemNotifier = new WindowsSystemNotifier();
             IFontInstaller installer = useMachineWide.Value
                 ? new WindowsFontInstaller(systemNotifier, InstallationScope.Machine)
                 : new WindowsFontInstaller(systemNotifier, InstallationScope.User);
@@ -99,25 +122,25 @@ public class Program
                 switch (command)
                 {
                     case "install":
-                        if (!remainingArgs.Any())
+                        if (!fontPaths.Any())
                         {
                             Console.WriteLine("Please provide at least one file or directory path for installation.");
                             PrintUsage();
                             return 1;
                         }
 
-                        fontManager.InstallFonts(remainingArgs.ToArray());
+                        fontManager.InstallFonts(fontPaths.ToArray(), updateFonts);
 
                         break;
                     case "uninstall":
-                        if (!remainingArgs.Any())
+                        if (!fontPaths.Any())
                         {
                             Console.WriteLine("Please provide at least one font name for uninstallation.");
                             PrintUsage();
                             return 1;
                         }
 
-                        fontManager.UninstallFonts(remainingArgs.ToArray());
+                        fontManager.UninstallFonts(fontPaths.ToArray());
                         break;
                     default:
                         Console.WriteLine("Invalid command. Use install or uninstall.");
@@ -135,6 +158,12 @@ public class Program
                 {
                     WinApi.RestartAndClearFontCacheService();
                     Console.WriteLine("Windows Font Cache service restarted.");
+                }
+
+                if (notify)
+                {
+                    systemNotifier.NotifyFontChange();
+                    Console.WriteLine("Notified Windows applications to reload fonts.");
                 }
             }
         }
@@ -156,11 +185,15 @@ public class Program
         Console.WriteLine("  --user, -u        : Install for current user only (default)");
         Console.WriteLine("  --machine, -m     : Install for all users (requires admin rights)");
         Console.WriteLine("  --all-users       : Same as --machine");
+        Console.WriteLine("  --update          : Forces update/reinstallation of fonts");
+        Console.WriteLine("  --force           : Same as --update");
+        Console.WriteLine("  --notify          : Will notify windows applications to reload fonts (always happens on install/uninstall)");
         Console.WriteLine("  --clear-cache, --restart-font-cache");
         Console.WriteLine("                    : Restart the Windows Font Cache service after operation");
         Console.WriteLine("                      refreshing font list and removing cached uninstalled fonts.");
         Console.WriteLine("                      This command physically deletes %LOCALAPPDATA%\\**\\FontCache directories");
         Console.WriteLine();
-        Console.WriteLine("Note: All font operations require administrator rights\n");
+        Console.WriteLine("Note: All font operations require administrator rights");
+        Console.WriteLine("Source-code: https://github.com/Nucs/FontRegister");
     }
 }

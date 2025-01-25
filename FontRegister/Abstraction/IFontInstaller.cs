@@ -19,21 +19,22 @@ public interface IFontInstaller
     /// </param>
     /// <returns>A FontIdentification object if the font is found, null otherwise.</returns>
     FontIdentification? IdentifyFont(string fontNameOrPath);
-    
+
     /// <summary>
     /// Installs a font from the specified file path.
     /// </summary>
     /// <param name="fontPath">The full path to the font file to install. Can be:
-    /// - Absolute path (e.g. "C:/Windows/Fonts/arial.ttf")
-    /// - Relative path (e.g. "./fonts/arial.ttf")
-    /// - Parent relative path (e.g. "../fonts/arial.ttf")
-    /// - Forward slash path (e.g. "fonts/arial.ttf")
-    /// The path will be normalized and converted to absolute path before installation.
+    ///     - Absolute path (e.g. "C:/Windows/Fonts/arial.ttf")
+    ///     - Relative path (e.g. "./fonts/arial.ttf")
+    ///     - Parent relative path (e.g. "../fonts/arial.ttf")
+    ///     - Forward slash path (e.g. "fonts/arial.ttf")
+    ///     The path will be normalized and converted to absolute path before installation.
     /// </param>
+    /// <param name="updateFonts">If true, the passed <paramref name="fontPath"/> will be updated/reinstalled</param>
     /// <returns>A tuple containing:
     /// - InstalledSuccessfully: True if installation was successful, false otherwise
     /// - Identification: Font identification details if available, null if installation failed</returns>
-    (bool InstalledSuccessfully, FontIdentification? Identfication) InstallFont(string fontPath);
+    (bool InstalledSuccessfully, FontIdentification? Identfication) InstallFont(string fontPath, bool updateFonts = false);
 
     /// <summary>
     /// Uninstalls a font using either its name or file path.
