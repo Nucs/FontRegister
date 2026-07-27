@@ -1,4 +1,4 @@
-# <img src="https://i.imgur.com/Q4WoRjy.png" width="25" style="margin: 5px 0px 0px 10px"/> FontRegister
+# <img src="FontRegister/Properties/icon.png" width="25" style="margin: 5px 0px 0px 10px"/> FontRegister
 [![Nuget version](https://img.shields.io/nuget/vpre/FontRegister.svg)](https://www.nuget.org/packages/FontRegister/)
 [![Nuget downloads](https://osscdn.nucs.workers.dev/fontregister-downloads-MWOvBQvHYk.svg)](https://www.nuget.org/packages/FontRegister/)
 [![GitHub license](https://osscdn.nucs.workers.dev/fontregister-license-cXEQmlIdUz.svg)](https://github.com/Nucs/FontRegister/blob/master/LICENSE)
